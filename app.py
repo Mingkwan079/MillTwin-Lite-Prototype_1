@@ -1319,7 +1319,7 @@ st.markdown(
     .machine-setup-header {
         display:flex; align-items:center; justify-content:space-between;
         margin:.9rem .05rem .55rem; padding:.2rem 0 .55rem;
-        border-bottom:1px solid rgba(255,250,255,.20);
+        border-bottom:1px solid rgba(255,250,255,.12);
         color:var(--cream); font:700 .72rem/1.25 var(--mono);
         letter-spacing:.10em; text-transform:uppercase;
     }
@@ -1330,7 +1330,7 @@ st.markdown(
     .side-status {
         display:flex; justify-content:space-between; align-items:center;
         margin:.55rem .05rem .9rem; padding:.72rem .75rem;
-        border:1px solid rgba(255,250,255,.20); border-radius:9px;
+        border:1px solid rgba(255,250,255,.12); border-radius:9px;
         color:var(--cream); font:600 .68rem var(--mono); letter-spacing:.08em; text-transform:uppercase;
     }
     .side-status__value { display:flex; gap:.45rem; align-items:center; color:#B9F57D; }
@@ -1884,7 +1884,7 @@ st.markdown(
     /* Permanent machining rail: target only the column that contains our marker. */
     div[data-testid="stColumn"]:has(.millcore-rail-marker) {
         background: linear-gradient(180deg, #071d4e 0%, #0A2463 55%, #04183f 100%) !important;
-        border: 1px solid rgba(62,146,204,.42) !important;
+        border: 0 !important;
         border-radius: 14px !important;
         padding: .95rem .9rem 1.15rem !important;
         position: sticky !important;
@@ -1894,8 +1894,8 @@ st.markdown(
         overflow-y: auto !important;
         overflow-x: hidden !important;
         scrollbar-width: thin;
-        scrollbar-color: rgba(255,244,232,.35) transparent;
-        box-shadow: 0 14px 34px rgba(10,36,99,.12) !important;
+        scrollbar-color: rgba(255,244,232,.26) transparent;
+        box-shadow: none !important;
     }
 
     div[data-testid="stColumn"]:has(.millcore-rail-marker)::-webkit-scrollbar { width: 7px; }
@@ -1920,30 +1920,51 @@ st.markdown(
     }
 
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-input-label,
-    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-input-hint,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-header,
-    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-sub,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-header *,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .side-status,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .side-status * {
         color: #FFF4E8 !important;
         -webkit-text-fill-color: #FFF4E8 !important;
+        text-shadow: none !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-input-hint,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-sub,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .sidebar-brand__mark {
+        color: #91D0FF !important;
+        -webkit-text-fill-color: #91D0FF !important;
     }
 
     /* Inputs in the rail: readable on navy, with thin minimal borders. */
     div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] input,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-baseweb="select"] > div,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) textarea {
-        background: rgba(255,250,255,.075) !important;
-        color: #FFF4E8 !important;
-        -webkit-text-fill-color: #FFF4E8 !important;
-        border-color: rgba(255,244,232,.24) !important;
+        background: rgba(255,244,232,.96) !important;
+        color: #0A2463 !important;
+        -webkit-text-fill-color: #0A2463 !important;
+        border: 1px solid rgba(145,208,255,.75) !important;
+        border-radius: 10px !important;
         box-shadow: none !important;
     }
 
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] > div,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-baseweb="base-input"] {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
     div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button {
-        background: rgba(255,250,255,.055) !important;
+        background: #0B2C69 !important;
         color: #FFF4E8 !important;
-        border-color: rgba(255,244,232,.16) !important;
+        border: 1px solid rgba(145,208,255,.34) !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button:hover {
+        background: #11377F !important;
+        border-color: rgba(145,208,255,.68) !important;
+        color: #FFF4E8 !important;
     }
     div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button svg,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button svg * {
@@ -1966,9 +1987,10 @@ st.markdown(
 
     /* Expander in the rail: closed = navy/cream, opened = cream/navy. */
     div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] {
-        border: 1px solid rgba(255,244,232,.24) !important;
+        border: 1px solid rgba(255,244,232,.10) !important;
         background: transparent !important;
         border-radius: 9px !important;
+        box-shadow: none !important;
     }
     div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details:not([open]) > summary,
     div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details:not([open]) > summary * {
@@ -1990,26 +2012,57 @@ st.markdown(
     }
     .millcore-main-marker { display:none !important; width:0; height:0; }
 
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) img {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
     /* Slightly compact the left logo so the six linked controls fit on common laptops. */
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .sidebar-brand__logo-frame {
         margin-bottom: .6rem !important;
-        padding: .35rem !important;
-        background: rgba(255,250,255,.98) !important;
-        border: 1px solid rgba(255,244,232,.28) !important;
+        padding: .2rem !important;
+        background: transparent !important;
+        border: 0 !important;
         box-shadow: none !important;
         overflow: hidden !important;
-        min-height: 118px !important;
-        display:grid !important;
-        place-items:center !important;
+        min-height: auto !important;
+        display: grid !important;
+        place-items: center !important;
+        border-radius: 0 !important;
     }
     div[data-testid="stColumn"]:has(.millcore-rail-marker) .sidebar-brand__logo {
-        width: 138% !important;
-        max-width: none !important;
-        height: 132px !important;
-        object-fit: cover !important;
-        transform: scale(1.10) !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: min(100%, 260px) !important;
+        height: auto !important;
+        max-height: 130px !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        transform: none !important;
+        margin: 0 auto !important;
     }
 
+
+    /* Make tiny helper text and current-value captions readable in the rail. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stMarkdownContainer"],
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stMarkdownContainer"] *,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .st-emotion-cache-*,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .stSlider [data-testid="stTickBarMin"],
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .stSlider [data-testid="stTickBarMax"] {
+        text-shadow: none !important;
+    }
+
+    /* Keep images from bleeding outside any card/frame in the rail. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stImage"] {
+        overflow: hidden !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stImage"] > div {
+        overflow: hidden !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
     @media (max-width: 1050px) {
         /* Streamlit columns may stack on narrow screens; remove sticky behavior there. */
         div[data-testid="stColumn"]:has(.millcore-rail-marker) {
