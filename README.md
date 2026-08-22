@@ -1,6 +1,6 @@
-# MillTwin-Lite — Streamlit deployment package
+# MillTwin-Lite
 
-This folder is the **lightweight public/demo deployment** extracted from WP3. It contains only the files required to run MillTwin-Lite inference and the UI; training checkpoints, MLflow data, large output folders, and development scripts are intentionally excluded.
+Physics-informed CNC model for Sa/Sz prediction, inverse parameter search, and surface validation.
 
 ## Included files
 
