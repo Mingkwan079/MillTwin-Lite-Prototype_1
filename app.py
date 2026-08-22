@@ -72,7 +72,7 @@ st.set_page_config(
     page_title="MillTwin-Lite | CNC Surface Intelligence",
     page_icon=_page_icon,
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",  # native sidebar unused; persistent rail is in the page shell
 )
 
 st.markdown(
@@ -115,8 +115,18 @@ st.markdown(
         background-attachment: fixed;
     }
 
-    [data-testid="stHeader"], footer, #MainMenu {
-        visibility: hidden;
+    /* Keep the Streamlit header alive. On Community Cloud the sidebar toggle
+       is mounted in the header on narrow/mobile viewports. Hiding the whole
+       header can make a collapsed sidebar impossible to reopen. */
+    header[data-testid="stHeader"] {
+        visibility: visible !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        height: 2.6rem !important;
+        z-index: 100000 !important;
+    }
+    #MainMenu, footer {
+        visibility: hidden !important;
     }
 
     .block-container {
@@ -1766,6 +1776,38 @@ st.markdown(
         stroke: currentColor !important;
     }
 
+    /* 4) Cloud sidebar hardening. Streamlit 1.62 supports
+       initial_sidebar_state="locked". On desktop this keeps the machining
+       console permanently expanded. These selectors only reinforce the
+       expanded state and do not fake a sidebar when Streamlit is in mobile
+       mode. */
+    @media (min-width: 1000px) {
+        section[data-testid="stSidebar"][aria-expanded="true"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            transform: none !important;
+            margin-left: 0 !important;
+            min-width: 350px !important;
+            width: 350px !important;
+            max-width: 350px !important;
+            flex: 0 0 350px !important;
+        }
+        section[data-testid="stSidebar"][aria-expanded="true"] > div {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    }
+
+    /* Keep the native collapsed control usable on mobile/narrow screens. */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 100001 !important;
+    }
+
     /* 3) Magenta primary CTA: NEVER inherit the generic muted paragraph color. */
     div[data-testid="stButton"] button[kind="primary"],
     div[data-testid="stButton"] button[data-testid="stBaseButton-primary"],
@@ -1817,6 +1859,169 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+
+# =============================================================================
+# Deploy-stable application shell
+# =============================================================================
+st.markdown(
+    """
+    <style>
+    /* Native Streamlit sidebar is intentionally not used in the deployed shell.
+       A normal left column is used instead so Cloud cannot collapse/lose the
+       machining controls because of browser state or Streamlit header changes. */
+    section[data-testid="stSidebar"],
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        display: none !important;
+    }
+
+    .block-container {
+        max-width: 1840px !important;
+        padding: .7rem 1rem 3.5rem !important;
+    }
+
+    /* Permanent machining rail: target only the column that contains our marker. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) {
+        background: linear-gradient(180deg, #071d4e 0%, #0A2463 55%, #04183f 100%) !important;
+        border: 1px solid rgba(62,146,204,.42) !important;
+        border-radius: 14px !important;
+        padding: .95rem .9rem 1.15rem !important;
+        position: sticky !important;
+        top: .55rem !important;
+        align-self: flex-start !important;
+        max-height: calc(100vh - 1.1rem) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,244,232,.35) transparent;
+        box-shadow: 0 14px 34px rgba(10,36,99,.12) !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker)::-webkit-scrollbar { width: 7px; }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker)::-webkit-scrollbar-thumb {
+        background: rgba(255,244,232,.30); border-radius: 20px;
+    }
+
+    /* Marker itself occupies no space. */
+    .millcore-rail-marker { display:none !important; width:0; height:0; }
+
+    /* Rail typography / labels */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) h1,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) h2,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) h3,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) label,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) p,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) span,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) summary,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .stCaption {
+        color: #FFF4E8 !important;
+        -webkit-text-fill-color: #FFF4E8 !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-input-label,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-input-hint,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-header,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .machine-setup-sub,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .side-status,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .side-status * {
+        color: #FFF4E8 !important;
+        -webkit-text-fill-color: #FFF4E8 !important;
+    }
+
+    /* Inputs in the rail: readable on navy, with thin minimal borders. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] input,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-baseweb="select"] > div,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) textarea {
+        background: rgba(255,250,255,.075) !important;
+        color: #FFF4E8 !important;
+        -webkit-text-fill-color: #FFF4E8 !important;
+        border-color: rgba(255,244,232,.24) !important;
+        box-shadow: none !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button {
+        background: rgba(255,250,255,.055) !important;
+        color: #FFF4E8 !important;
+        border-color: rgba(255,244,232,.16) !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button svg,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) div[data-testid="stNumberInput"] button svg * {
+        color: #FFF4E8 !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stSlider"] [role="slider"] {
+        background: #D8315B !important;
+        border: 2px solid #FFF4E8 !important;
+        box-shadow: none !important;
+    }
+
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stSlider"] [data-testid="stTickBar"] span,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stSlider"] div {
+        color: rgba(255,244,232,.82) !important;
+        -webkit-text-fill-color: rgba(255,244,232,.82) !important;
+    }
+
+    /* Expander in the rail: closed = navy/cream, opened = cream/navy. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] {
+        border: 1px solid rgba(255,244,232,.24) !important;
+        background: transparent !important;
+        border-radius: 9px !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details:not([open]) > summary,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details:not([open]) > summary * {
+        background: transparent !important;
+        color: #FFF4E8 !important;
+        -webkit-text-fill-color: #FFF4E8 !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details[open] > summary,
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) [data-testid="stExpander"] details[open] > summary * {
+        background: #FFF4E8 !important;
+        color: #0A2463 !important;
+        -webkit-text-fill-color: #0A2463 !important;
+    }
+
+    /* Give the right workspace enough room and avoid the old centered-empty-space look. */
+    div[data-testid="stColumn"]:has(.millcore-main-marker) {
+        min-width: 0 !important;
+        padding-left: .15rem !important;
+    }
+    .millcore-main-marker { display:none !important; width:0; height:0; }
+
+    /* Slightly compact the left logo so the six linked controls fit on common laptops. */
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .sidebar-brand__logo-frame {
+        margin-bottom: .6rem !important;
+        padding: .35rem !important;
+        background: rgba(255,250,255,.98) !important;
+        border: 1px solid rgba(255,244,232,.28) !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+        min-height: 118px !important;
+        display:grid !important;
+        place-items:center !important;
+    }
+    div[data-testid="stColumn"]:has(.millcore-rail-marker) .sidebar-brand__logo {
+        width: 138% !important;
+        max-width: none !important;
+        height: 132px !important;
+        object-fit: cover !important;
+        transform: scale(1.10) !important;
+    }
+
+    @media (max-width: 1050px) {
+        /* Streamlit columns may stack on narrow screens; remove sticky behavior there. */
+        div[data-testid="stColumn"]:has(.millcore-rail-marker) {
+            position: relative !important;
+            top: auto !important;
+            max-height: none !important;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 # =============================================================================
@@ -2378,10 +2583,10 @@ def linked_number_slider(
         st.session_state[slider_key] = canonical
 
     # IMPORTANT: this helper can be called from the main script, so every widget
-    # must be explicitly mounted in st.sidebar.  Using plain st.number_input /
+    # must be explicitly mounted in CONTROL_PANEL.  Using plain st.number_input /
     # st.slider here renders them in the main page on Streamlit Cloud.
-    st.sidebar.markdown(f'<div class="machine-input-label">{label}</div>', unsafe_allow_html=True)
-    st.sidebar.number_input(
+    CONTROL_PANEL.markdown(f'<div class="machine-input-label">{label}</div>', unsafe_allow_html=True)
+    CONTROL_PANEL.number_input(
         label,
         min_value=min_v,
         max_value=max_v,
@@ -2392,7 +2597,7 @@ def linked_number_slider(
         on_change=_sync_machine_input,
         args=(number_key, slider_key, key, integer),
     )
-    st.sidebar.slider(
+    CONTROL_PANEL.slider(
         f"{label} slider",
         min_value=min_v,
         max_value=max_v,
@@ -2403,7 +2608,7 @@ def linked_number_slider(
         on_change=_sync_machine_input,
         args=(slider_key, number_key, key, integer),
     )
-    st.sidebar.markdown(f'<div class="machine-input-hint">{unit_hint}</div>', unsafe_allow_html=True)
+    CONTROL_PANEL.markdown(f'<div class="machine-input-hint">{unit_hint}</div>', unsafe_allow_html=True)
 
     return _coerce_linked_value(st.session_state[key], integer)
 
@@ -2417,13 +2622,19 @@ info_path = find_latest_project_file(["info.json"])
 info = load_info(str(info_path) if info_path is not None else None)
 raw_ranges = info.get("input_ranges", DESIGN_RANGES)
 
+# Deploy-stable shell: use a normal left column instead of Streamlit's native sidebar.
+# This avoids Community Cloud restoring a hidden/collapsed sidebar state.
+CONTROL_PANEL, APP_MAIN = st.columns([0.235, 0.765], gap="medium")
+CONTROL_PANEL.markdown('<div class="millcore-rail-marker"></div>', unsafe_allow_html=True)
+APP_MAIN.markdown('<div class="millcore-main-marker"></div>', unsafe_allow_html=True)
+
 sidebar_logo_html = (
     f'<img class="sidebar-brand__logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">'
     if brand_logo_b64
     else '<div style="color:#FFF4E8;font-family:Impact,sans-serif;font-size:2rem;text-align:center;">MILLCORE</div>'
 )
 
-st.sidebar.markdown(
+CONTROL_PANEL.markdown(
     f"""
     <div class="sidebar-brand">
         <div class="sidebar-brand__logo-frame">{sidebar_logo_html}</div>
@@ -2433,7 +2644,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-with st.sidebar.expander("01 / MODEL INTERFACE", expanded=False):
+with CONTROL_PANEL.expander("01 / MODEL INTERFACE", expanded=False):
     uploaded_model = st.file_uploader(
         "Forward PIDL model",
         type=["onnx"],
@@ -2446,7 +2657,7 @@ model_ready = model_session is not None
 status_label = "ONLINE" if model_ready else "OFFLINE"
 status_dot = "" if model_ready else " status-dot-mini--off"
 
-st.sidebar.markdown(
+CONTROL_PANEL.markdown(
     f"""
     <div class="side-status">
         <span>MODEL STATUS</span>
@@ -2459,7 +2670,7 @@ st.sidebar.markdown(
 # Keep the six model inputs permanently visible inside the sidebar.
 # This intentionally avoids placing MACHINE SETUP inside an expander because
 # Streamlit Cloud can restore a collapsed expander/sidebar state per browser.
-st.sidebar.markdown(
+CONTROL_PANEL.markdown(
     '<div class="machine-setup-header"><span>02 / MACHINE SETUP</span><span>6 INPUTS</span></div>'
     '<div class="machine-setup-sub">Type an exact value or drag the linked slider.</div>',
     unsafe_allow_html=True,
@@ -2484,7 +2695,7 @@ ap = linked_number_slider(
     key="forward_ap", fmt="%.2f", unit_hint="MM · TYPE OR DRAG",
 )
 
-milling_mode = st.sidebar.selectbox(
+milling_mode = CONTROL_PANEL.selectbox(
     "Milling mode", MILLING_MODES,
     index=MILLING_MODES.index(st.session_state.get("forward_mode", "down"))
     if st.session_state.get("forward_mode", "down") in MILLING_MODES else 0,
@@ -2504,752 +2715,753 @@ eps_a = linked_number_slider(
     key="forward_ea", fmt="%.1f", unit_hint="µM · TYPE OR DRAG",
 )
 
-hero_logo = (
-    f'<img class="hero-brand-logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">'
-    if brand_logo_b64
-    else '<div class="hero-brand-logo" style="display:grid;place-items:center;color:#FFF4E8;font:5rem Impact,sans-serif;">M</div>'
-)
+with APP_MAIN:
+    hero_logo = (
+        f'<img class="hero-brand-logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">'
+        if brand_logo_b64
+        else '<div class="hero-brand-logo" style="display:grid;place-items:center;color:#FFF4E8;font:5rem Impact,sans-serif;">M</div>'
+    )
 
-st.markdown(
-    f"""
-    <div class="brutal-hero">
-        <div class="brutal-hero__main">
-            {hero_logo}
-            <div class="hero-copy-wrap">
-                <div class="brutal-hero__index">A MILLCORE TEAM ENGINEERING PLATFORM</div>
-                <div class="brutal-hero__title">MillTwin-Lite</div>
-                <div class="brutal-hero__chips">
-                    <div class="brutal-chip brutal-chip--hot">● PIDL ENGINE</div>
-                    <div class="brutal-chip">ONNX INFERENCE</div>
-                    <div class="brutal-chip">CNC MILLING</div>
-                    <div class="brutal-chip">Sa / Sz</div>
-                    <div class="brutal-chip">Ra QC</div>
+    st.markdown(
+        f"""
+        <div class="brutal-hero">
+            <div class="brutal-hero__main">
+                {hero_logo}
+                <div class="hero-copy-wrap">
+                    <div class="brutal-hero__index">A MILLCORE TEAM ENGINEERING PLATFORM</div>
+                    <div class="brutal-hero__title">MillTwin-Lite</div>
+                    <div class="brutal-hero__chips">
+                        <div class="brutal-chip brutal-chip--hot">● PIDL ENGINE</div>
+                        <div class="brutal-chip">ONNX INFERENCE</div>
+                        <div class="brutal-chip">CNC MILLING</div>
+                        <div class="brutal-chip">Sa / Sz</div>
+                        <div class="brutal-chip">Ra QC</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+        """,
+        unsafe_allow_html=True,
+    )
 
 
-# =============================================================================
-# Session state
-# =============================================================================
-if "last_prediction" not in st.session_state:
-    st.session_state.last_prediction = None
+    # =============================================================================
+    # Session state
+    # =============================================================================
+    if "last_prediction" not in st.session_state:
+        st.session_state.last_prediction = None
 
-if "inverse_results" not in st.session_state:
-    st.session_state.inverse_results = None
+    if "inverse_results" not in st.session_state:
+        st.session_state.inverse_results = None
 
-if "prediction_history" not in st.session_state:
-    st.session_state.prediction_history = []
+    if "prediction_history" not in st.session_state:
+        st.session_state.prediction_history = []
 
-if "ra_check_result" not in st.session_state:
-    st.session_state.ra_check_result = None
-
-
-# =============================================================================
-# Tabs
-# =============================================================================
-forward_tab, inverse_tab, history_tab, ra_tab, fem_tab, info_tab = st.tabs(
-    [
-        "Forward",
-        "Inverse",
-        "History",
-        "Ra QC",
-        "Validation",
-        "Dossier",
-    ]
-)
+    if "ra_check_result" not in st.session_state:
+        st.session_state.ra_check_result = None
 
 
-# =============================================================================
-# Forward prediction tab
-# =============================================================================
-with forward_tab:
-    section_header("01 / PREDICTIVE MACHINING", "Forward Prediction", "Predict surface results from one machining condition.")
+    # =============================================================================
+    # Tabs
+    # =============================================================================
+    forward_tab, inverse_tab, history_tab, ra_tab, fem_tab, info_tab = st.tabs(
+        [
+            "Forward",
+            "Inverse",
+            "History",
+            "Ra QC",
+            "Validation",
+            "Dossier",
+        ]
+    )
 
-    control_col, result_col = st.columns([0.78, 2.22], gap="large")
 
-    with control_col:
-        st.markdown('<div class="ui-card-label">QUALITY CEILINGS</div>', unsafe_allow_html=True)
-        target_sa = st.number_input(
-            "Target Sa [µm]", min_value=0.001, max_value=20.0, value=1.0,
-            step=0.05, format="%.3f", key="target_sa",
-        )
-        target_sz = st.number_input(
-            "Target Sz [µm]", min_value=0.001, max_value=100.0, value=5.0,
-            step=0.1, format="%.3f", key="target_sz",
-        )
-        run_clicked = st.button(
-            "RUN PIDL INFERENCE", type="primary", width="stretch",
-            disabled=model_session is None,
-        )
+    # =============================================================================
+    # Forward prediction tab
+    # =============================================================================
+    with forward_tab:
+        section_header("01 / PREDICTIVE MACHINING", "Forward Prediction", "Predict surface results from one machining condition.")
 
-        if model_session is None:
-            st.caption("ONNX model required.")
-        else:
-            st.caption("Six process inputs are set in Machine Setup.")
+        control_col, result_col = st.columns([0.78, 2.22], gap="large")
 
-    if run_clicked:
-        raw_values = np.array([[n, fz, ap, ae, eps_r, eps_a]], dtype=np.float32)
-        try:
-            validate_mode_ae(milling_mode, ae)
-            values = encode_model_inputs(raw_values, milling_mode)
-            prediction, elapsed = predict(model_session, values)
-            prediction_params = dict(zip(FEATURES, raw_values[0]))
-            prediction_params["milling_mode"] = milling_mode
-            sa_pred = float(prediction[0, 0])
-            sz_pred = float(prediction[0, 1])
-            st.session_state.last_prediction = {"Sa": sa_pred, "Sz": sz_pred, "time": elapsed, "params": prediction_params}
-            append_prediction_history(
-                params=prediction_params,
-                sa_pred_um=sa_pred,
-                sz_pred_um=sz_pred,
-                target_sa_um=float(target_sa),
-                target_sz_um=float(target_sz),
-                inference_ms=elapsed,
+        with control_col:
+            st.markdown('<div class="ui-card-label">QUALITY CEILINGS</div>', unsafe_allow_html=True)
+            target_sa = st.number_input(
+                "Target Sa [µm]", min_value=0.001, max_value=20.0, value=1.0,
+                step=0.05, format="%.3f", key="target_sa",
             )
-        except Exception as error:
-            st.error(str(error))
+            target_sz = st.number_input(
+                "Target Sz [µm]", min_value=0.001, max_value=100.0, value=5.0,
+                step=0.1, format="%.3f", key="target_sz",
+            )
+            run_clicked = st.button(
+                "RUN PIDL INFERENCE", type="primary", width="stretch",
+                disabled=model_session is None,
+            )
 
-    result = st.session_state.last_prediction
-    target_met = bool(result and result["Sa"] <= float(target_sa) and result["Sz"] <= float(target_sz))
-    sa_value = f"{result['Sa']:.3f}" if result else "—"
-    sz_value = f"{result['Sz']:.3f}" if result else "—"
-    sa_card_state = "result-card--pass" if result and result["Sa"] <= float(target_sa) else "result-card--fail" if result else "result-card--pending"
-    sz_card_state = "result-card--pass" if result and result["Sz"] <= float(target_sz) else "result-card--fail" if result else "result-card--pending"
+            if model_session is None:
+                st.caption("ONNX model required.")
+            else:
+                st.caption("Six process inputs are set in Machine Setup.")
 
-    with result_col:
-        st.markdown(
-            f"""
-            <div class="result-display">
-                <div class="result-card {sa_card_state}">
-                    <div class="result-card__label">PREDICTED AREAL MEAN ROUGHNESS · SA</div>
-                    <div class="result-card__value">{sa_value}<span class="result-card__unit">µm</span></div>
-                    <div class="result-card__meta">Sa ceiling · {float(target_sa):.3f} µm</div>
-                </div>
-                <div class="result-card {sz_card_state}">
-                    <div class="result-card__label">PREDICTED MAXIMUM SURFACE HEIGHT · SZ</div>
-                    <div class="result-card__value">{sz_value}<span class="result-card__unit">µm</span></div>
-                    <div class="result-card__meta">Sz ceiling · {float(target_sz):.3f} µm</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        state = "PASS" if target_met else ("REVIEW" if result else "READY FOR INFERENCE")
-        detail = f"Latency {result['time']:.3f} ms" if result else "Configure machining parameters and run the PIDL model."
-        st.markdown(
-            f'<div class="forward-status"><div><strong>{state}</strong><br><small>{detail}</small></div><div class="forward-status__arrow">→</div></div>',
-            unsafe_allow_html=True,
-        )
-
-    params = {
-        "n_rpm": n, "fz_mm_per_tooth": fz, "ap_mm": ap, "ae_mm": ae,
-        "eps_r_um": eps_r, "eps_a_um": eps_a, "milling_mode": milling_mode,
-    }
-    range_df = in_range_badges(params).rename(columns={
-        "Feature": "Process variable", "Value": "Current value", "Design min": "Domain minimum",
-        "Design max": "Domain maximum", "Inside design range": "In domain",
-    })
-    in_domain = bool(range_df.empty or range_df["In domain"].all())
-
-    with st.expander("PROCESS DOMAIN / DIAGNOSTICS", expanded=False):
-        st.dataframe(range_df, width="stretch", hide_index=True)
-        if result:
-            d1, d2 = st.columns(2)
-            with d1:
-                st.plotly_chart(roughness_chart("Sa", result["Sa"], target_sa), width="stretch", config={"displayModeBar": False})
-            with d2:
-                st.plotly_chart(roughness_chart("Sz", result["Sz"], target_sz), width="stretch", config={"displayModeBar": False})
-            physics_ok = result["Sa"] > 0 and result["Sz"] >= 2.0 * result["Sa"]
-            st.caption(f"Geometry consistency: {'PASS' if physics_ok else 'REVIEW'} · Model domain: {'IN' if in_domain else 'OUT'}")
-
-
-# =============================================================================
-# Inverse search tab
-# =============================================================================
-with inverse_tab:
-    section_header("02 / PARAMETER SYNTHESIS", "Inverse Search", "Sa and Sz are the commanding inputs.")
-
-    target_sa_col, target_sz_col = st.columns(2, gap="medium")
-    with target_sa_col:
-        i_sa = st.number_input("Maximum Sa (µm)", min_value=0.001, value=1.0, step=0.05, format="%.3f", key="i_sa")
-    with target_sz_col:
-        i_sz = st.number_input("Maximum Sz (µm)", min_value=0.001, value=5.0, step=0.1, format="%.3f", key="i_sz")
-
-    search_col, ranked_col = st.columns([0.86, 1.64], gap="large")
-
-    with search_col:
-        st.markdown('<div class="ui-card-label">SEARCH ENVELOPE</div>', unsafe_allow_html=True)
-        d1, d2 = st.columns(2)
-        with d1:
-            n_min = st.number_input("n min [rpm]", 1000, 8000, 1000, 100, key="inverse_n_min")
-            fz_min = st.number_input("fz min [mm/tooth]", 0.02, 0.12, 0.02, 0.005, format="%.3f", key="inverse_fz_min")
-        with d2:
-            n_max = st.number_input("n max [rpm]", 1000, 8000, 8000, 100, key="inverse_n_max")
-            fz_max = st.number_input("fz max [mm/tooth]", 0.02, 0.12, 0.12, 0.005, format="%.3f", key="inverse_fz_max")
-
-        st.markdown('<div class="ui-card-label">FIXED PROCESS STATE</div>', unsafe_allow_html=True)
-        f1, f2 = st.columns(2)
-        with f1:
-            i_ap = st.number_input("ap [mm]", 0.3, 1.5, float(ap), 0.10, format="%.2f", key="inverse_ap")
-            i_er = st.number_input("εr [µm]", -10.0, 10.0, float(eps_r), 0.1, format="%.1f", key="inverse_er")
-        with f2:
-            i_ae = st.number_input("ae [mm]", 0.3, 3.0, min(max(float(ae), 0.3), 3.0), 0.1, format="%.1f", key="inverse_ae_partial")
-            i_ea = st.number_input("εa [µm]", 0.0, 5.0, float(eps_a), 0.1, format="%.1f", key="inverse_ea")
-        i_mode = "down"
-        teeth = NUM_FLUTES
-        top_k = st.number_input("Ranked results", 1, 100, 10, 1, key="inverse_top_k")
-
-        with st.expander("GRID / PRODUCTIVITY LIMITS", expanded=False):
-            n_points = st.number_input("n grid points", 2, 500, 120, 1, key="inverse_n_points")
-            fz_points = st.number_input("fz grid points", 2, 500, 120, 1, key="inverse_fz_points")
-            feed_max = st.number_input("Max feed F [mm/min] · 0 = off", min_value=0.0, value=0.0, step=100.0, key="inverse_feed_max")
-            mrr_max = st.number_input("Max MRR [mm³/min] · 0 = off", min_value=0.0, value=0.0, step=1000.0, key="inverse_mrr_max")
-
-        run_inverse = st.button("RUN INVERSE SEARCH", type="primary", width="stretch")
-
-    if run_inverse:
-        if model_session is None:
-            st.error("No ONNX model is available. Train or upload a model first.")
-        elif n_min >= n_max:
-            st.error("n minimum must be smaller than n maximum.")
-        elif fz_min >= fz_max:
-            st.error("fz minimum must be smaller than fz maximum.")
-        else:
-            n_grid = np.linspace(float(n_min), float(n_max), int(n_points))
-            fz_grid = np.linspace(float(fz_min), float(fz_max), int(fz_points))
-            n_mesh, fz_mesh = np.meshgrid(n_grid, fz_grid, indexing="ij")
-            count = n_mesh.size
-            raw_X = np.column_stack([
-                n_mesh.ravel(), fz_mesh.ravel(), np.full(count, i_ap), np.full(count, i_ae),
-                np.full(count, i_er), np.full(count, i_ea),
-            ]).astype(np.float32)
+        if run_clicked:
+            raw_values = np.array([[n, fz, ap, ae, eps_r, eps_a]], dtype=np.float32)
             try:
-                validate_mode_ae(i_mode, i_ae)
-                X = encode_model_inputs(raw_X, i_mode)
-                prediction, elapsed = predict(model_session, X)
-                result_df = pd.DataFrame(raw_X, columns=FEATURES)
-                result_df["milling_mode"] = i_mode
-                result_df["Sa_pred_um"] = prediction[:, 0]
-                result_df["Sz_pred_um"] = prediction[:, 1]
-                result_df["F_mm_min"] = result_df["n_rpm"] * result_df["fz_mm_per_tooth"] * int(teeth)
-                result_df["MRR_mm3_min"] = result_df["ap_mm"] * result_df["ae_mm"] * result_df["F_mm_min"]
-                result_df["roughness_pass"] = (result_df["Sa_pred_um"] <= float(i_sa)) & (result_df["Sz_pred_um"] <= float(i_sz))
-                feasible_mask = result_df["roughness_pass"].copy()
-                if feed_max > 0: feasible_mask &= result_df["F_mm_min"] <= float(feed_max)
-                if mrr_max > 0: feasible_mask &= result_df["MRR_mm3_min"] <= float(mrr_max)
-                result_df["feasible"] = feasible_mask
-                result_df["violation"] = (
-                    np.maximum(0, (result_df["Sa_pred_um"] - float(i_sa)) / float(i_sa)) ** 2
-                    + np.maximum(0, (result_df["Sz_pred_um"] - float(i_sz)) / float(i_sz)) ** 2
+                validate_mode_ae(milling_mode, ae)
+                values = encode_model_inputs(raw_values, milling_mode)
+                prediction, elapsed = predict(model_session, values)
+                prediction_params = dict(zip(FEATURES, raw_values[0]))
+                prediction_params["milling_mode"] = milling_mode
+                sa_pred = float(prediction[0, 0])
+                sz_pred = float(prediction[0, 1])
+                st.session_state.last_prediction = {"Sa": sa_pred, "Sz": sz_pred, "time": elapsed, "params": prediction_params}
+                append_prediction_history(
+                    params=prediction_params,
+                    sa_pred_um=sa_pred,
+                    sz_pred_um=sz_pred,
+                    target_sa_um=float(target_sa),
+                    target_sz_um=float(target_sz),
+                    inference_ms=elapsed,
                 )
-                feasible = result_df[result_df["feasible"]].copy()
-                if len(feasible) > 0:
-                    ranked = feasible.sort_values(["MRR_mm3_min", "Sa_pred_um", "Sz_pred_um"], ascending=[False, True, True]).head(int(top_k))
-                else:
-                    ranked = result_df.sort_values(["violation", "Sa_pred_um", "Sz_pred_um"], ascending=[True, True, True]).head(int(top_k))
-                ranked.attrs["elapsed_ms"] = elapsed
-                ranked.attrs["feasible_count"] = len(feasible)
-                st.session_state.inverse_results = ranked
             except Exception as error:
                 st.error(str(error))
 
-    with ranked_col:
-        st.markdown('<div class="ui-card-label">RANKED MACHINING SOLUTION</div>', unsafe_allow_html=True)
-        if st.session_state.inverse_results is None:
-            st.markdown('<div class="inverse-placeholder"><div><strong>AWAITING SEARCH</strong>Set the target surface and run inverse search.</div></div>', unsafe_allow_html=True)
-        else:
-            display_df = st.session_state.inverse_results.copy()
-            best = display_df.iloc[0]
-            best_state = "FEASIBLE" if bool(best.get("feasible", False)) else "CLOSEST AVAILABLE"
+        result = st.session_state.last_prediction
+        target_met = bool(result and result["Sa"] <= float(target_sa) and result["Sz"] <= float(target_sz))
+        sa_value = f"{result['Sa']:.3f}" if result else "—"
+        sz_value = f"{result['Sz']:.3f}" if result else "—"
+        sa_card_state = "result-card--pass" if result and result["Sa"] <= float(target_sa) else "result-card--fail" if result else "result-card--pending"
+        sz_card_state = "result-card--pass" if result and result["Sz"] <= float(target_sz) else "result-card--fail" if result else "result-card--pending"
+
+        with result_col:
             st.markdown(
                 f"""
-                <div class="best-candidate">
-                    <div class="best-candidate__label">TOP CANDIDATE / {best_state}</div>
-                    <div class="best-candidate__value">
-                        n <b>{best['n_rpm']:.0f}</b> rpm · fz <b>{best['fz_mm_per_tooth']:.3f}</b> mm/tooth ·
-                        ap <b>{best['ap_mm']:.2f}</b> mm · ae <b>{best['ae_mm']:.1f}</b> mm ·
-                        Sa <b>{best['Sa_pred_um']:.3f}</b> µm · Sz <b>{best['Sz_pred_um']:.3f}</b> µm ·
-                        MRR <b>{best['MRR_mm3_min']:.1f}</b> mm³/min
+                <div class="result-display">
+                    <div class="result-card {sa_card_state}">
+                        <div class="result-card__label">PREDICTED AREAL MEAN ROUGHNESS · SA</div>
+                        <div class="result-card__value">{sa_value}<span class="result-card__unit">µm</span></div>
+                        <div class="result-card__meta">Sa ceiling · {float(target_sa):.3f} µm</div>
+                    </div>
+                    <div class="result-card {sz_card_state}">
+                        <div class="result-card__label">PREDICTED MAXIMUM SURFACE HEIGHT · SZ</div>
+                        <div class="result-card__value">{sz_value}<span class="result-card__unit">µm</span></div>
+                        <div class="result-card__meta">Sz ceiling · {float(target_sz):.3f} µm</div>
                     </div>
                 </div>
-                """, unsafe_allow_html=True,
+                """,
+                unsafe_allow_html=True,
             )
-            table_df = display_df[[
-                "n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","F_mm_min","MRR_mm3_min","feasible"
-            ]]
-            st.dataframe(table_df, width="stretch", hide_index=True)
-            st.download_button("EXPORT RESULTS · CSV", table_df.to_csv(index=False), "inverse_results.csv", "text/csv", width="stretch")
+            state = "PASS" if target_met else ("REVIEW" if result else "READY FOR INFERENCE")
+            detail = f"Latency {result['time']:.3f} ms" if result else "Configure machining parameters and run the PIDL model."
+            st.markdown(
+                f'<div class="forward-status"><div><strong>{state}</strong><br><small>{detail}</small></div><div class="forward-status__arrow">→</div></div>',
+                unsafe_allow_html=True,
+            )
 
-
-# =============================================================================
-# Ra showcase check tab
-# =============================================================================
-with ra_tab:
-    section_header(
-        "04 / QUALITY GATE",
-        "Ra Quality Check",
-        "Measured Ra versus the drawing limit.",
-    )
-
-    ra_col1, ra_col2, ra_col3 = st.columns([1, 1, 1.15])
-    with ra_col1:
-        ra_measured = st.number_input(
-            "Measured Ra [µm]",
-            min_value=0.001,
-            max_value=100.0,
-            value=0.800,
-            step=0.050,
-            format="%.3f",
-            key="ra_measured_um",
-            help="Enter the Ra value reported by the profilometer, or use a manual demo value for showcasing.",
-        )
-    with ra_col2:
-        ra_limit = st.number_input(
-            "Maximum allowable Ra [µm]",
-            min_value=0.001,
-            max_value=100.0,
-            value=1.600,
-            step=0.050,
-            format="%.3f",
-            key="ra_limit_um",
-        )
-    with ra_col3:
-        ra_source = st.selectbox(
-            "Inspection source",
-            ["Profilometer / external measurement", "Manual demo entry"],
-            key="ra_source",
-        )
-
-    ra_ref_col, ra_action_col = st.columns([1.6, 1])
-    with ra_ref_col:
-        ra_sample_ref = st.text_input(
-            "Part / sample reference",
-            value="DEMO-01",
-            key="ra_sample_ref",
-            help="Display label only; it is not used in any calculation.",
-        )
-    with ra_action_col:
-        st.write("")
-        st.write("")
-        ra_check_clicked = st.button(
-            "CHECK RA QUALITY",
-            type="primary",
-            width="stretch",
-            key="run_ra_quality_check",
-        )
-
-    if ra_check_clicked:
-        ra_value = float(ra_measured)
-        ra_max = float(ra_limit)
-        ra_passed = ra_value <= ra_max
-        ra_margin = ra_max - ra_value
-        ra_utilization = (ra_value / ra_max) * 100.0
-        st.session_state.ra_check_result = {
-            "value": ra_value,
-            "limit": ra_max,
-            "passed": ra_passed,
-            "margin": ra_margin,
-            "utilization": ra_utilization,
-            "source": str(ra_source),
-            "sample_ref": str(ra_sample_ref).strip() or "UNNAMED",
+        params = {
+            "n_rpm": n, "fz_mm_per_tooth": fz, "ap_mm": ap, "ae_mm": ae,
+            "eps_r_um": eps_r, "eps_a_um": eps_a, "milling_mode": milling_mode,
         }
+        range_df = in_range_badges(params).rename(columns={
+            "Feature": "Process variable", "Value": "Current value", "Design min": "Domain minimum",
+            "Design max": "Domain maximum", "Inside design range": "In domain",
+        })
+        in_domain = bool(range_df.empty or range_df["In domain"].all())
 
-    ra_result = st.session_state.ra_check_result
+        with st.expander("PROCESS DOMAIN / DIAGNOSTICS", expanded=False):
+            st.dataframe(range_df, width="stretch", hide_index=True)
+            if result:
+                d1, d2 = st.columns(2)
+                with d1:
+                    st.plotly_chart(roughness_chart("Sa", result["Sa"], target_sa), width="stretch", config={"displayModeBar": False})
+                with d2:
+                    st.plotly_chart(roughness_chart("Sz", result["Sz"], target_sz), width="stretch", config={"displayModeBar": False})
+                physics_ok = result["Sa"] > 0 and result["Sz"] >= 2.0 * result["Sa"]
+                st.caption(f"Geometry consistency: {'PASS' if physics_ok else 'REVIEW'} · Model domain: {'IN' if in_domain else 'OUT'}")
 
-    if ra_result is None:
-        st.markdown(
-            """
-            <div class="ra-ticket">
-                <div class="ra-ticket__status ra-ticket__status--pending">
-                    <div>
-                        <div class="ra-ticket__eyebrow">Ra inspection state</div>
-                        <div class="ra-ticket__word">READY</div>
-                    </div>
-                    <div class="ra-ticket__rule">Rule / Ra measured ≤ Ra maximum<br>Waiting for inspection input.</div>
-                </div>
-                <div class="ra-ticket__body">
-                    <div class="ra-ticket__head"><span>Inspection ticket</span><span>MILLTWIN // RA-QC</span></div>
-                    <div class="ra-ticket__metrics">
-                        <div class="ra-ticket__metric"><span>Measured Ra</span><strong>—<em>µm</em></strong></div>
-                        <div class="ra-ticket__metric"><span>Ra limit</span><strong>—<em>µm</em></strong></div>
-                        <div class="ra-ticket__metric"><span>Margin</span><strong>—<em>µm</em></strong></div>
-                    </div>
-                    <div class="ra-ticket__foot">Manual quality-gate showcase. The deployed ONNX model remains Sa/Sz-only.</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        ra_passed = bool(ra_result["passed"])
-        status_word = "PASS" if ra_passed else "REVIEW"
-        status_class = "" if ra_passed else "ra-ticket__status--review"
-        fill_class = "" if ra_passed else "ra-ticket__meter-fill--review"
-        meter_width = max(0.0, min(float(ra_result["utilization"]), 100.0))
-        margin_label = "Margin" if ra_passed else "Exceedance"
-        margin_value = abs(float(ra_result["margin"]))
-        ref_text = html.escape(str(ra_result["sample_ref"]))
-        source_text = html.escape(str(ra_result["source"]))
-        utilization = float(ra_result["utilization"])
 
-        st.markdown(
-            f"""
-            <div class="ra-ticket">
-                <div class="ra-ticket__status {status_class}">
-                    <div>
-                        <div class="ra-ticket__eyebrow">Ra inspection state</div>
-                        <div class="ra-ticket__word">{status_word}</div>
-                    </div>
-                    <div class="ra-ticket__rule">
-                        Rule / Ra measured ≤ Ra maximum<br>
-                        Sample / {ref_text}
-                    </div>
-                </div>
-                <div class="ra-ticket__body">
-                    <div class="ra-ticket__head"><span>Inspection ticket</span><span>MILLTWIN // RA-QC</span></div>
-                    <div class="ra-ticket__metrics">
-                        <div class="ra-ticket__metric"><span>Measured Ra</span><strong>{ra_result['value']:.3f}<em>µm</em></strong></div>
-                        <div class="ra-ticket__metric"><span>Ra limit</span><strong>{ra_result['limit']:.3f}<em>µm</em></strong></div>
-                        <div class="ra-ticket__metric"><span>{margin_label}</span><strong>{margin_value:.3f}<em>µm</em></strong></div>
-                    </div>
-                    <div>
-                        <div class="ra-ticket__meter-wrap">
-                            <div class="ra-ticket__meter-label"><span>Limit utilization</span><span>{utilization:.1f}%</span></div>
-                            <div class="ra-ticket__meter"><div class="ra-ticket__meter-fill {fill_class}" style="width:{meter_width:.1f}%"></div></div>
+    # =============================================================================
+    # Inverse search tab
+    # =============================================================================
+    with inverse_tab:
+        section_header("02 / PARAMETER SYNTHESIS", "Inverse Search", "Sa and Sz are the commanding inputs.")
+
+        target_sa_col, target_sz_col = st.columns(2, gap="medium")
+        with target_sa_col:
+            i_sa = st.number_input("Maximum Sa (µm)", min_value=0.001, value=1.0, step=0.05, format="%.3f", key="i_sa")
+        with target_sz_col:
+            i_sz = st.number_input("Maximum Sz (µm)", min_value=0.001, value=5.0, step=0.1, format="%.3f", key="i_sz")
+
+        search_col, ranked_col = st.columns([0.86, 1.64], gap="large")
+
+        with search_col:
+            st.markdown('<div class="ui-card-label">SEARCH ENVELOPE</div>', unsafe_allow_html=True)
+            d1, d2 = st.columns(2)
+            with d1:
+                n_min = st.number_input("n min [rpm]", 1000, 8000, 1000, 100, key="inverse_n_min")
+                fz_min = st.number_input("fz min [mm/tooth]", 0.02, 0.12, 0.02, 0.005, format="%.3f", key="inverse_fz_min")
+            with d2:
+                n_max = st.number_input("n max [rpm]", 1000, 8000, 8000, 100, key="inverse_n_max")
+                fz_max = st.number_input("fz max [mm/tooth]", 0.02, 0.12, 0.12, 0.005, format="%.3f", key="inverse_fz_max")
+
+            st.markdown('<div class="ui-card-label">FIXED PROCESS STATE</div>', unsafe_allow_html=True)
+            f1, f2 = st.columns(2)
+            with f1:
+                i_ap = st.number_input("ap [mm]", 0.3, 1.5, float(ap), 0.10, format="%.2f", key="inverse_ap")
+                i_er = st.number_input("εr [µm]", -10.0, 10.0, float(eps_r), 0.1, format="%.1f", key="inverse_er")
+            with f2:
+                i_ae = st.number_input("ae [mm]", 0.3, 3.0, min(max(float(ae), 0.3), 3.0), 0.1, format="%.1f", key="inverse_ae_partial")
+                i_ea = st.number_input("εa [µm]", 0.0, 5.0, float(eps_a), 0.1, format="%.1f", key="inverse_ea")
+            i_mode = "down"
+            teeth = NUM_FLUTES
+            top_k = st.number_input("Ranked results", 1, 100, 10, 1, key="inverse_top_k")
+
+            with st.expander("GRID / PRODUCTIVITY LIMITS", expanded=False):
+                n_points = st.number_input("n grid points", 2, 500, 120, 1, key="inverse_n_points")
+                fz_points = st.number_input("fz grid points", 2, 500, 120, 1, key="inverse_fz_points")
+                feed_max = st.number_input("Max feed F [mm/min] · 0 = off", min_value=0.0, value=0.0, step=100.0, key="inverse_feed_max")
+                mrr_max = st.number_input("Max MRR [mm³/min] · 0 = off", min_value=0.0, value=0.0, step=1000.0, key="inverse_mrr_max")
+
+            run_inverse = st.button("RUN INVERSE SEARCH", type="primary", width="stretch")
+
+        if run_inverse:
+            if model_session is None:
+                st.error("No ONNX model is available. Train or upload a model first.")
+            elif n_min >= n_max:
+                st.error("n minimum must be smaller than n maximum.")
+            elif fz_min >= fz_max:
+                st.error("fz minimum must be smaller than fz maximum.")
+            else:
+                n_grid = np.linspace(float(n_min), float(n_max), int(n_points))
+                fz_grid = np.linspace(float(fz_min), float(fz_max), int(fz_points))
+                n_mesh, fz_mesh = np.meshgrid(n_grid, fz_grid, indexing="ij")
+                count = n_mesh.size
+                raw_X = np.column_stack([
+                    n_mesh.ravel(), fz_mesh.ravel(), np.full(count, i_ap), np.full(count, i_ae),
+                    np.full(count, i_er), np.full(count, i_ea),
+                ]).astype(np.float32)
+                try:
+                    validate_mode_ae(i_mode, i_ae)
+                    X = encode_model_inputs(raw_X, i_mode)
+                    prediction, elapsed = predict(model_session, X)
+                    result_df = pd.DataFrame(raw_X, columns=FEATURES)
+                    result_df["milling_mode"] = i_mode
+                    result_df["Sa_pred_um"] = prediction[:, 0]
+                    result_df["Sz_pred_um"] = prediction[:, 1]
+                    result_df["F_mm_min"] = result_df["n_rpm"] * result_df["fz_mm_per_tooth"] * int(teeth)
+                    result_df["MRR_mm3_min"] = result_df["ap_mm"] * result_df["ae_mm"] * result_df["F_mm_min"]
+                    result_df["roughness_pass"] = (result_df["Sa_pred_um"] <= float(i_sa)) & (result_df["Sz_pred_um"] <= float(i_sz))
+                    feasible_mask = result_df["roughness_pass"].copy()
+                    if feed_max > 0: feasible_mask &= result_df["F_mm_min"] <= float(feed_max)
+                    if mrr_max > 0: feasible_mask &= result_df["MRR_mm3_min"] <= float(mrr_max)
+                    result_df["feasible"] = feasible_mask
+                    result_df["violation"] = (
+                        np.maximum(0, (result_df["Sa_pred_um"] - float(i_sa)) / float(i_sa)) ** 2
+                        + np.maximum(0, (result_df["Sz_pred_um"] - float(i_sz)) / float(i_sz)) ** 2
+                    )
+                    feasible = result_df[result_df["feasible"]].copy()
+                    if len(feasible) > 0:
+                        ranked = feasible.sort_values(["MRR_mm3_min", "Sa_pred_um", "Sz_pred_um"], ascending=[False, True, True]).head(int(top_k))
+                    else:
+                        ranked = result_df.sort_values(["violation", "Sa_pred_um", "Sz_pred_um"], ascending=[True, True, True]).head(int(top_k))
+                    ranked.attrs["elapsed_ms"] = elapsed
+                    ranked.attrs["feasible_count"] = len(feasible)
+                    st.session_state.inverse_results = ranked
+                except Exception as error:
+                    st.error(str(error))
+
+        with ranked_col:
+            st.markdown('<div class="ui-card-label">RANKED MACHINING SOLUTION</div>', unsafe_allow_html=True)
+            if st.session_state.inverse_results is None:
+                st.markdown('<div class="inverse-placeholder"><div><strong>AWAITING SEARCH</strong>Set the target surface and run inverse search.</div></div>', unsafe_allow_html=True)
+            else:
+                display_df = st.session_state.inverse_results.copy()
+                best = display_df.iloc[0]
+                best_state = "FEASIBLE" if bool(best.get("feasible", False)) else "CLOSEST AVAILABLE"
+                st.markdown(
+                    f"""
+                    <div class="best-candidate">
+                        <div class="best-candidate__label">TOP CANDIDATE / {best_state}</div>
+                        <div class="best-candidate__value">
+                            n <b>{best['n_rpm']:.0f}</b> rpm · fz <b>{best['fz_mm_per_tooth']:.3f}</b> mm/tooth ·
+                            ap <b>{best['ap_mm']:.2f}</b> mm · ae <b>{best['ae_mm']:.1f}</b> mm ·
+                            Sa <b>{best['Sa_pred_um']:.3f}</b> µm · Sz <b>{best['Sz_pred_um']:.3f}</b> µm ·
+                            MRR <b>{best['MRR_mm3_min']:.1f}</b> mm³/min
                         </div>
-                        <div class="ra-ticket__foot">Source / {source_text} · Reference / {ref_text} · This QC result is not a PIDL prediction.</div>
                     </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
+                    """, unsafe_allow_html=True,
+                )
+                table_df = display_df[[
+                    "n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","F_mm_min","MRR_mm3_min","feasible"
+                ]]
+                st.dataframe(table_df, width="stretch", hide_index=True)
+                st.download_button("EXPORT RESULTS · CSV", table_df.to_csv(index=False), "inverse_results.csv", "text/csv", width="stretch")
+
+
+    # =============================================================================
+    # Ra showcase check tab
+    # =============================================================================
+    with ra_tab:
+        section_header(
+            "04 / QUALITY GATE",
+            "Ra Quality Check",
+            "Measured Ra versus the drawing limit.",
         )
 
-        if ra_passed:
-            st.success(
-                f"Ra accepted — {ra_result['value']:.3f} ≤ {ra_result['limit']:.3f} µm. "
-                f"Remaining margin: {margin_value:.3f} µm."
+        ra_col1, ra_col2, ra_col3 = st.columns([1, 1, 1.15])
+        with ra_col1:
+            ra_measured = st.number_input(
+                "Measured Ra [µm]",
+                min_value=0.001,
+                max_value=100.0,
+                value=0.800,
+                step=0.050,
+                format="%.3f",
+                key="ra_measured_um",
+                help="Enter the Ra value reported by the profilometer, or use a manual demo value for showcasing.",
+            )
+        with ra_col2:
+            ra_limit = st.number_input(
+                "Maximum allowable Ra [µm]",
+                min_value=0.001,
+                max_value=100.0,
+                value=1.600,
+                step=0.050,
+                format="%.3f",
+                key="ra_limit_um",
+            )
+        with ra_col3:
+            ra_source = st.selectbox(
+                "Inspection source",
+                ["Profilometer / external measurement", "Manual demo entry"],
+                key="ra_source",
+            )
+
+        ra_ref_col, ra_action_col = st.columns([1.6, 1])
+        with ra_ref_col:
+            ra_sample_ref = st.text_input(
+                "Part / sample reference",
+                value="DEMO-01",
+                key="ra_sample_ref",
+                help="Display label only; it is not used in any calculation.",
+            )
+        with ra_action_col:
+            st.write("")
+            st.write("")
+            ra_check_clicked = st.button(
+                "CHECK RA QUALITY",
+                type="primary",
+                width="stretch",
+                key="run_ra_quality_check",
+            )
+
+        if ra_check_clicked:
+            ra_value = float(ra_measured)
+            ra_max = float(ra_limit)
+            ra_passed = ra_value <= ra_max
+            ra_margin = ra_max - ra_value
+            ra_utilization = (ra_value / ra_max) * 100.0
+            st.session_state.ra_check_result = {
+                "value": ra_value,
+                "limit": ra_max,
+                "passed": ra_passed,
+                "margin": ra_margin,
+                "utilization": ra_utilization,
+                "source": str(ra_source),
+                "sample_ref": str(ra_sample_ref).strip() or "UNNAMED",
+            }
+
+        ra_result = st.session_state.ra_check_result
+
+        if ra_result is None:
+            st.markdown(
+                """
+                <div class="ra-ticket">
+                    <div class="ra-ticket__status ra-ticket__status--pending">
+                        <div>
+                            <div class="ra-ticket__eyebrow">Ra inspection state</div>
+                            <div class="ra-ticket__word">READY</div>
+                        </div>
+                        <div class="ra-ticket__rule">Rule / Ra measured ≤ Ra maximum<br>Waiting for inspection input.</div>
+                    </div>
+                    <div class="ra-ticket__body">
+                        <div class="ra-ticket__head"><span>Inspection ticket</span><span>MILLTWIN // RA-QC</span></div>
+                        <div class="ra-ticket__metrics">
+                            <div class="ra-ticket__metric"><span>Measured Ra</span><strong>—<em>µm</em></strong></div>
+                            <div class="ra-ticket__metric"><span>Ra limit</span><strong>—<em>µm</em></strong></div>
+                            <div class="ra-ticket__metric"><span>Margin</span><strong>—<em>µm</em></strong></div>
+                        </div>
+                        <div class="ra-ticket__foot">Manual quality-gate showcase. The deployed ONNX model remains Sa/Sz-only.</div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
         else:
-            st.error(
-                f"Ra requires review — {ra_result['value']:.3f} > {ra_result['limit']:.3f} µm. "
-                f"Exceedance: {margin_value:.3f} µm."
+            ra_passed = bool(ra_result["passed"])
+            status_word = "PASS" if ra_passed else "REVIEW"
+            status_class = "" if ra_passed else "ra-ticket__status--review"
+            fill_class = "" if ra_passed else "ra-ticket__meter-fill--review"
+            meter_width = max(0.0, min(float(ra_result["utilization"]), 100.0))
+            margin_label = "Margin" if ra_passed else "Exceedance"
+            margin_value = abs(float(ra_result["margin"]))
+            ref_text = html.escape(str(ra_result["sample_ref"]))
+            source_text = html.escape(str(ra_result["source"]))
+            utilization = float(ra_result["utilization"])
+
+            st.markdown(
+                f"""
+                <div class="ra-ticket">
+                    <div class="ra-ticket__status {status_class}">
+                        <div>
+                            <div class="ra-ticket__eyebrow">Ra inspection state</div>
+                            <div class="ra-ticket__word">{status_word}</div>
+                        </div>
+                        <div class="ra-ticket__rule">
+                            Rule / Ra measured ≤ Ra maximum<br>
+                            Sample / {ref_text}
+                        </div>
+                    </div>
+                    <div class="ra-ticket__body">
+                        <div class="ra-ticket__head"><span>Inspection ticket</span><span>MILLTWIN // RA-QC</span></div>
+                        <div class="ra-ticket__metrics">
+                            <div class="ra-ticket__metric"><span>Measured Ra</span><strong>{ra_result['value']:.3f}<em>µm</em></strong></div>
+                            <div class="ra-ticket__metric"><span>Ra limit</span><strong>{ra_result['limit']:.3f}<em>µm</em></strong></div>
+                            <div class="ra-ticket__metric"><span>{margin_label}</span><strong>{margin_value:.3f}<em>µm</em></strong></div>
+                        </div>
+                        <div>
+                            <div class="ra-ticket__meter-wrap">
+                                <div class="ra-ticket__meter-label"><span>Limit utilization</span><span>{utilization:.1f}%</span></div>
+                                <div class="ra-ticket__meter"><div class="ra-ticket__meter-fill {fill_class}" style="width:{meter_width:.1f}%"></div></div>
+                            </div>
+                            <div class="ra-ticket__foot">Source / {source_text} · Reference / {ref_text} · This QC result is not a PIDL prediction.</div>
+                        </div>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    st.caption("QC uses measured/manual Ra only; PIDL inference remains Sa/Sz-only.")
-
-
-# =============================================================================
-# Prediction history tab
-# =============================================================================
-with history_tab:
-    section_header("03 / MACHINING LOGBOOK", "History", "Reuse previous predictions as a compact reference log.")
-    history = st.session_state.prediction_history
-
-    if not history:
-        st.markdown('<div class="inverse-placeholder"><div><strong>NO SAVED RUNS</strong>Forward predictions will appear here automatically.</div></div>', unsafe_allow_html=True)
-    else:
-        history_df = pd.DataFrame(history)
-        m1, m2, m3, m4 = st.columns(4)
-        with m1: st.metric("SAVED RUNS", f"{len(history_df)}")
-        with m2: st.metric("PASS", f"{int((history_df['decision'] == 'PASS').sum())}")
-        with m3: st.metric("REVIEW", f"{int((history_df['decision'] == 'REVIEW').sum())}")
-        with m4: st.metric("LATEST", str(history_df.iloc[-1]["created_at"])[11:16])
-
-        filter_col, export_col = st.columns([1, 1])
-        with filter_col:
-            decision_filter = st.selectbox("Decision filter", ["ALL", "PASS", "REVIEW"], key="history_decision_filter")
-        with export_col:
-            st.write("")
-            st.download_button("EXPORT HISTORY · CSV", history_df.to_csv(index=False), "milltwin_prediction_history.csv", "text/csv", width="stretch")
-
-        view_df = history_df.copy()
-        if decision_filter != "ALL": view_df = view_df[view_df["decision"] == decision_filter]
-        display_columns = ["created_at","n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","decision","note"]
-        st.dataframe(view_df[display_columns].sort_values("created_at", ascending=False), width="stretch", hide_index=True)
-
-        st.markdown('<div class="ui-card-label">SAVED RUN ACTIONS</div>', unsafe_allow_html=True)
-        record_indices = list(range(len(history) - 1, -1, -1))
-        selected_index = st.selectbox(
-            "Saved prediction",
-            record_indices,
-            format_func=lambda idx: f"{history[idx]['created_at']} · n {history[idx]['n_rpm']:.0f} · fz {history[idx]['fz_mm_per_tooth']:.3f} · Sa {history[idx]['Sa_pred_um']:.3f} · Sz {history[idx]['Sz_pred_um']:.3f} · {history[idx]['decision']}",
-            key="history_selected_index",
-        )
-        selected_record = history[int(selected_index)]
-        d1,d2,d3,d4 = st.columns(4)
-        with d1: st.metric("Sa", f"{selected_record['Sa_pred_um']:.3f} µm")
-        with d2: st.metric("Sz", f"{selected_record['Sz_pred_um']:.3f} µm")
-        with d3: st.metric("DECISION", selected_record["decision"])
-        with d4: st.metric("LATENCY", f"{selected_record['inference_ms']:.3f} ms")
-        note_key = f"history_note_{selected_record['record_id']}"
-        note_value = st.text_area("Engineering note", value=str(selected_record.get("note", "")), key=note_key, placeholder="Process note…")
-        a1,a2,a3,a4 = st.columns(4)
-        with a1:
-            st.button("REUSE PARAMETERS", type="primary", width="stretch", on_click=reuse_history_record, args=(selected_record,))
-        with a2:
-            if st.button("SAVE NOTE", width="stretch"):
-                st.session_state.prediction_history[int(selected_index)]["note"] = note_value
-                st.success("Note saved.")
-        with a3:
-            if st.button("DELETE RECORD", width="stretch"):
-                del st.session_state.prediction_history[int(selected_index)]
-                st.session_state.pop("history_selected_index", None)
-                st.rerun()
-        with a4:
-            if st.button("CLEAR HISTORY", width="stretch"):
-                st.session_state.prediction_history = []
-                st.session_state.pop("history_selected_index", None)
-                st.rerun()
-        st.caption("Session log only. A persistent machining handbook can be added in a later product phase.")
-
-
-# =============================================================================
-# FEM comparison tab
-# =============================================================================
-with fem_tab:
-    section_header(
-        "05 / EVIDENCE CHECK",
-        "Validation",
-        "Compare predictions against labelled FEM or measurement data.",
-    )
-
-    fem_file = st.file_uploader(
-        "Reference dataset [CSV]",
-        type=["csv"],
-        key="fem_upload",
-    )
-
-    if fem_file is not None:
-        try:
-            fem = pd.read_csv(fem_file)
-            fem = normalize_fem_columns(fem)
-
-            required = [*FEATURES, *TARGETS]
-            missing = [column for column in required if column not in fem.columns]
-
-            if missing:
-                st.error(f"Missing required FEM columns: {missing}")
-            elif model_session is None:
-                st.error("No ONNX model is available. Train or upload a model first.")
+            if ra_passed:
+                st.success(
+                    f"Ra accepted — {ra_result['value']:.3f} ≤ {ra_result['limit']:.3f} µm. "
+                    f"Remaining margin: {margin_value:.3f} µm."
+                )
             else:
-                raw_X_fem = fem[FEATURES].to_numpy(dtype=np.float32)
-                X_fem = encode_model_inputs(raw_X_fem, "down")
-                pred_fem, elapsed_fem = predict(model_session, X_fem)
-
-                result_fem = fem.copy()
-                result_fem["Sa_pred_um"] = pred_fem[:, 0]
-                result_fem["Sz_pred_um"] = pred_fem[:, 1]
-                result_fem["Sa_error_um"] = result_fem["Sa_pred_um"] - result_fem["Sa_um"]
-                result_fem["Sz_error_um"] = result_fem["Sz_pred_um"] - result_fem["Sz_um"]
-                result_fem["Sa_abs_error_um"] = result_fem["Sa_error_um"].abs()
-                result_fem["Sz_abs_error_um"] = result_fem["Sz_error_um"].abs()
-
-                metrics_fem = fem_metrics(fem, pred_fem)
-
-                st.success(f"FEM comparison completed. Inference time: {elapsed_fem:.3f} ms.")
-
-                st.markdown("#### Validation summary")
-                for _, metric_row in metrics_fem.iterrows():
-                    target_name = str(metric_row["target"]).replace("_um", "")
-                    v1, v2, v3, v4 = st.columns(4)
-                    with v1:
-                        st.metric(f"{target_name} · R²", f"{metric_row['R2']:.4f}")
-                    with v2:
-                        st.metric(f"{target_name} · MAE", f"{metric_row['MAE_um']:.4f} µm")
-                    with v3:
-                        st.metric(f"{target_name} · RMSE", f"{metric_row['RMSE_um']:.4f} µm")
-                    with v4:
-                        st.metric(f"{target_name} · MAPE", f"{metric_row['MAPE_percent']:.2f}%")
-
-                with st.expander("Detailed validation metrics", expanded=False):
-                    st.dataframe(
-                        metrics_fem.style.format(
-                            {
-                                "R2": "{:.6f}",
-                                "MAE_um": "{:.6f}",
-                                "RMSE_um": "{:.6f}",
-                                "MAPE_percent": "{:.3f}",
-                            }
-                        ),
-                        width="stretch",
-                        hide_index=True,
-                    )
-
-                with st.expander("Pointwise comparison · raw rows", expanded=False):
-                    st.dataframe(
-                        result_fem.style.format(
-                            {
-                                "n_rpm": "{:.0f}",
-                                "fz_mm_per_tooth": "{:.2f}",
-                                "ap_mm": "{:.2f}",
-                                "ae_mm": "{:.1f}",
-                                "eps_r_um": "{:.1f}",
-                                "eps_a_um": "{:.1f}",
-                                "Sa_um": "{:.3f}",
-                                "Sz_um": "{:.3f}",
-                                "Sa_pred_um": "{:.3f}",
-                                "Sz_pred_um": "{:.3f}",
-                                "Sa_error_um": "{:.3f}",
-                                "Sz_error_um": "{:.3f}",
-                                "Sa_abs_error_um": "{:.3f}",
-                                "Sz_abs_error_um": "{:.3f}",
-                            }
-                        ),
-                        width="stretch",
-                    )
-
-                st.download_button(
-                    label="EXPORT VALIDATION RESULTS · CSV",
-                    data=result_fem.to_csv(index=False),
-                    file_name="fem_comparison.csv",
-                    mime="text/csv",
-                    width="stretch",
+                st.error(
+                    f"Ra requires review — {ra_result['value']:.3f} > {ra_result['limit']:.3f} µm. "
+                    f"Exceedance: {margin_value:.3f} µm."
                 )
 
-        except Exception as error:
-            st.error(str(error))
-    else:
-        st.info("Upload FEM/external CSV to compare model predictions against external labels.")
+        st.caption("QC uses measured/manual Ra only; PIDL inference remains Sa/Sz-only.")
 
 
-# =============================================================================
-# Dossier / guide / model scope
-# =============================================================================
-with info_tab:
-    section_header("06 / SYSTEM GUIDE", "Dossier", "Quick start, model scope and contact in one place.")
+    # =============================================================================
+    # Prediction history tab
+    # =============================================================================
+    with history_tab:
+        section_header("03 / MACHINING LOGBOOK", "History", "Reuse previous predictions as a compact reference log.")
+        history = st.session_state.prediction_history
 
-    st.markdown(
-        """
-        <div class="dossier-grid">
-          <div class="dossier-panel">
-            <div class="dossier-panel__title">01 / QUICK START</div>
-            <div class="quick-steps">
-              <div class="quick-step"><div class="quick-step__n">01 →</div><div class="quick-step__name">Forward</div><div class="quick-step__copy">Predict Sa / Sz from machining inputs.</div></div>
-              <div class="quick-step"><div class="quick-step__n">02 →</div><div class="quick-step__name">Inverse</div><div class="quick-step__copy">Find candidate parameters for a target surface.</div></div>
-              <div class="quick-step"><div class="quick-step__n">03 →</div><div class="quick-step__name">History</div><div class="quick-step__copy">Reuse prior predictions as a reference log.</div></div>
-              <div class="quick-step"><div class="quick-step__n">04 →</div><div class="quick-step__name">Ra QC</div><div class="quick-step__copy">Check measured Ra against a drawing limit.</div></div>
-              <div class="quick-step"><div class="quick-step__n">05 →</div><div class="quick-step__name">Validation</div><div class="quick-step__copy">Compare model output with labelled data.</div></div>
-            </div>
-          </div>
-          <div class="dossier-panel">
-            <div class="dossier-panel__title">02 / CONTACT</div>
-            <div class="contact-stack">
-              <a class="contact-pill" href="tel:0703166078"><span class="contact-pill__icon">☎</span><span>0703166078</span></a>
-              <a class="contact-pill" href="mailto:phuc.lerobotic@hcmut.edu.vn"><span class="contact-pill__icon">✉</span><span>phuc.lerobotic@hcmut.edu.vn</span></a>
-            </div>
-            <div class="roadmap-note" style="margin-top:1rem;">G-code generation is intentionally excluded. The current product stops at decision support and expert-level parameter reference. A persistent machining handbook can be considered later.</div>
-          </div>
-        </div>
-        <div class="dossier-panel" style="margin-bottom:1rem;">
-          <div class="dossier-panel__title">03 / MOTION LANGUAGE</div>
-          <div class="motion-list">
-            <div class="motion-item"><strong>Hover lift</strong>Controls rise slightly to signal interactivity.</div>
-            <div class="motion-item"><strong>Underline sweep</strong>Navigation reveals the magenta accent on hover.</div>
-            <div class="motion-item"><strong>Soft drift</strong>The engineering grid moves slowly in the background.</div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    with st.expander("MODEL SCHEMA / DESIGN DOMAIN", expanded=False):
-        schema_rows = []
-        for feature in FEATURES:
-            low, high = clean_range(feature, raw_ranges)
-            schema_rows.append({
-                "Column": feature,
-                "Type": "Input",
-                "Unit": {"n_rpm":"rpm","fz_mm_per_tooth":"mm/tooth","ap_mm":"mm","ae_mm":"mm","eps_r_um":"µm","eps_a_um":"µm"}.get(feature, ""),
-                "UI range": f"{low:g} – {high:g}",
-            })
-        schema_rows.append({"Column": MILLING_MODE, "Type": "Fixed condition", "Unit": "categorical", "UI range": "down (fixed)"})
-        for target in TARGETS:
-            schema_rows.append({"Column": target, "Type": "Output", "Unit": "µm", "UI range": "-"})
-        st.dataframe(pd.DataFrame(schema_rows), width="stretch", hide_index=True)
-
-    with st.expander("MODEL INFORMATION", expanded=False):
-        info_summary = {
-            "model_type": info.get("model_type", "unknown"),
-            "selected_model": info.get("selected_model", info.get("selected_pidl_model", "unknown")),
-            "best_validation_accuracy_model": info.get("best_validation_accuracy_model", "unknown"),
-            "dataset_file": info.get("dataset_file", "dataset_endmill_v1_valid.csv"),
-            "dataset_rows": info.get("dataset_rows", "unknown"),
-            "split_method": info.get("split_method", "unknown"),
-            "split": info.get("split", {}),
-            "feature_columns": info.get("raw_input_columns", [*FEATURES, MILLING_MODE]),
-            "model_feature_columns": info.get("model_feature_columns", MODEL_FEATURES),
-            "target_columns": info.get("target_columns", TARGETS),
-            "fixed_tool": info.get("fixed_tool", {"D_mm": 6.0, "Zn": 4, "beta_deg": 36.0}),
-            "physical_scope": info.get("physical_scope", "unknown"),
-        }
-        st.json(info_summary)
-
-    with st.expander("ACCURACY / PHYSICS DIAGNOSTICS", expanded=False):
-        metrics_path = find_latest_project_file(["model_metrics.csv", "ablation_results.csv", "metrics.csv"])
-        if metrics_path is not None:
-            try:
-                st.dataframe(pd.read_csv(metrics_path), width="stretch", hide_index=True)
-            except Exception as error:
-                st.warning(f"Could not read {metrics_path}: {error}")
+        if not history:
+            st.markdown('<div class="inverse-placeholder"><div><strong>NO SAVED RUNS</strong>Forward predictions will appear here automatically.</div></div>', unsafe_allow_html=True)
         else:
-            st.info("No model metrics file found.")
-        physics_path = find_latest_project_file(["physics_diagnostics.csv", "physics_metrics.csv"])
-        if physics_path is not None:
+            history_df = pd.DataFrame(history)
+            m1, m2, m3, m4 = st.columns(4)
+            with m1: st.metric("SAVED RUNS", f"{len(history_df)}")
+            with m2: st.metric("PASS", f"{int((history_df['decision'] == 'PASS').sum())}")
+            with m3: st.metric("REVIEW", f"{int((history_df['decision'] == 'REVIEW').sum())}")
+            with m4: st.metric("LATEST", str(history_df.iloc[-1]["created_at"])[11:16])
+
+            filter_col, export_col = st.columns([1, 1])
+            with filter_col:
+                decision_filter = st.selectbox("Decision filter", ["ALL", "PASS", "REVIEW"], key="history_decision_filter")
+            with export_col:
+                st.write("")
+                st.download_button("EXPORT HISTORY · CSV", history_df.to_csv(index=False), "milltwin_prediction_history.csv", "text/csv", width="stretch")
+
+            view_df = history_df.copy()
+            if decision_filter != "ALL": view_df = view_df[view_df["decision"] == decision_filter]
+            display_columns = ["created_at","n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","decision","note"]
+            st.dataframe(view_df[display_columns].sort_values("created_at", ascending=False), width="stretch", hide_index=True)
+
+            st.markdown('<div class="ui-card-label">SAVED RUN ACTIONS</div>', unsafe_allow_html=True)
+            record_indices = list(range(len(history) - 1, -1, -1))
+            selected_index = st.selectbox(
+                "Saved prediction",
+                record_indices,
+                format_func=lambda idx: f"{history[idx]['created_at']} · n {history[idx]['n_rpm']:.0f} · fz {history[idx]['fz_mm_per_tooth']:.3f} · Sa {history[idx]['Sa_pred_um']:.3f} · Sz {history[idx]['Sz_pred_um']:.3f} · {history[idx]['decision']}",
+                key="history_selected_index",
+            )
+            selected_record = history[int(selected_index)]
+            d1,d2,d3,d4 = st.columns(4)
+            with d1: st.metric("Sa", f"{selected_record['Sa_pred_um']:.3f} µm")
+            with d2: st.metric("Sz", f"{selected_record['Sz_pred_um']:.3f} µm")
+            with d3: st.metric("DECISION", selected_record["decision"])
+            with d4: st.metric("LATENCY", f"{selected_record['inference_ms']:.3f} ms")
+            note_key = f"history_note_{selected_record['record_id']}"
+            note_value = st.text_area("Engineering note", value=str(selected_record.get("note", "")), key=note_key, placeholder="Process note…")
+            a1,a2,a3,a4 = st.columns(4)
+            with a1:
+                st.button("REUSE PARAMETERS", type="primary", width="stretch", on_click=reuse_history_record, args=(selected_record,))
+            with a2:
+                if st.button("SAVE NOTE", width="stretch"):
+                    st.session_state.prediction_history[int(selected_index)]["note"] = note_value
+                    st.success("Note saved.")
+            with a3:
+                if st.button("DELETE RECORD", width="stretch"):
+                    del st.session_state.prediction_history[int(selected_index)]
+                    st.session_state.pop("history_selected_index", None)
+                    st.rerun()
+            with a4:
+                if st.button("CLEAR HISTORY", width="stretch"):
+                    st.session_state.prediction_history = []
+                    st.session_state.pop("history_selected_index", None)
+                    st.rerun()
+            st.caption("Session log only. A persistent machining handbook can be added in a later product phase.")
+
+
+    # =============================================================================
+    # FEM comparison tab
+    # =============================================================================
+    with fem_tab:
+        section_header(
+            "05 / EVIDENCE CHECK",
+            "Validation",
+            "Compare predictions against labelled FEM or measurement data.",
+        )
+
+        fem_file = st.file_uploader(
+            "Reference dataset [CSV]",
+            type=["csv"],
+            key="fem_upload",
+        )
+
+        if fem_file is not None:
             try:
-                st.dataframe(pd.read_csv(physics_path), width="stretch", hide_index=True)
+                fem = pd.read_csv(fem_file)
+                fem = normalize_fem_columns(fem)
+
+                required = [*FEATURES, *TARGETS]
+                missing = [column for column in required if column not in fem.columns]
+
+                if missing:
+                    st.error(f"Missing required FEM columns: {missing}")
+                elif model_session is None:
+                    st.error("No ONNX model is available. Train or upload a model first.")
+                else:
+                    raw_X_fem = fem[FEATURES].to_numpy(dtype=np.float32)
+                    X_fem = encode_model_inputs(raw_X_fem, "down")
+                    pred_fem, elapsed_fem = predict(model_session, X_fem)
+
+                    result_fem = fem.copy()
+                    result_fem["Sa_pred_um"] = pred_fem[:, 0]
+                    result_fem["Sz_pred_um"] = pred_fem[:, 1]
+                    result_fem["Sa_error_um"] = result_fem["Sa_pred_um"] - result_fem["Sa_um"]
+                    result_fem["Sz_error_um"] = result_fem["Sz_pred_um"] - result_fem["Sz_um"]
+                    result_fem["Sa_abs_error_um"] = result_fem["Sa_error_um"].abs()
+                    result_fem["Sz_abs_error_um"] = result_fem["Sz_error_um"].abs()
+
+                    metrics_fem = fem_metrics(fem, pred_fem)
+
+                    st.success(f"FEM comparison completed. Inference time: {elapsed_fem:.3f} ms.")
+
+                    st.markdown("#### Validation summary")
+                    for _, metric_row in metrics_fem.iterrows():
+                        target_name = str(metric_row["target"]).replace("_um", "")
+                        v1, v2, v3, v4 = st.columns(4)
+                        with v1:
+                            st.metric(f"{target_name} · R²", f"{metric_row['R2']:.4f}")
+                        with v2:
+                            st.metric(f"{target_name} · MAE", f"{metric_row['MAE_um']:.4f} µm")
+                        with v3:
+                            st.metric(f"{target_name} · RMSE", f"{metric_row['RMSE_um']:.4f} µm")
+                        with v4:
+                            st.metric(f"{target_name} · MAPE", f"{metric_row['MAPE_percent']:.2f}%")
+
+                    with st.expander("Detailed validation metrics", expanded=False):
+                        st.dataframe(
+                            metrics_fem.style.format(
+                                {
+                                    "R2": "{:.6f}",
+                                    "MAE_um": "{:.6f}",
+                                    "RMSE_um": "{:.6f}",
+                                    "MAPE_percent": "{:.3f}",
+                                }
+                            ),
+                            width="stretch",
+                            hide_index=True,
+                        )
+
+                    with st.expander("Pointwise comparison · raw rows", expanded=False):
+                        st.dataframe(
+                            result_fem.style.format(
+                                {
+                                    "n_rpm": "{:.0f}",
+                                    "fz_mm_per_tooth": "{:.2f}",
+                                    "ap_mm": "{:.2f}",
+                                    "ae_mm": "{:.1f}",
+                                    "eps_r_um": "{:.1f}",
+                                    "eps_a_um": "{:.1f}",
+                                    "Sa_um": "{:.3f}",
+                                    "Sz_um": "{:.3f}",
+                                    "Sa_pred_um": "{:.3f}",
+                                    "Sz_pred_um": "{:.3f}",
+                                    "Sa_error_um": "{:.3f}",
+                                    "Sz_error_um": "{:.3f}",
+                                    "Sa_abs_error_um": "{:.3f}",
+                                    "Sz_abs_error_um": "{:.3f}",
+                                }
+                            ),
+                            width="stretch",
+                        )
+
+                    st.download_button(
+                        label="EXPORT VALIDATION RESULTS · CSV",
+                        data=result_fem.to_csv(index=False),
+                        file_name="fem_comparison.csv",
+                        mime="text/csv",
+                        width="stretch",
+                    )
+
             except Exception as error:
-                st.warning(f"Could not read {physics_path}: {error}")
-
-    with st.expander("LIMITATIONS / CLOUD DEPLOYMENT", expanded=False):
-        limitations = info.get("limitations", [
-            "Trained on D6 EndMill FSM synthetic labels only.",
-            "Current physics excludes vibration, chatter, material constitutive behavior and tool wear.",
-            "FEM or experimental validation is required before claiming real machining accuracy.",
-        ])
-        for item in limitations:
-            st.write(f"- {item}")
-        required_files = [
-            "app.py",
-            "logo.png",
-            "milltwin_pidl_sasz.onnx",
-            "info.json",
-            "model_metrics.csv",
-            "physics_diagnostics.csv",
-            "ablation_results.csv",
-            "model_card.md",
-            "requirements.txt",
-        ]
-        file_rows = []
-        for file in required_files:
-            located_file = find_latest_project_file([file])
-            file_rows.append({"File":file,"Exists":located_file is not None,"Location":str(located_file) if located_file else ""})
-        st.dataframe(pd.DataFrame(file_rows), width="stretch", hide_index=True)
+                st.error(str(error))
+        else:
+            st.info("Upload FEM/external CSV to compare model predictions against external labels.")
 
 
-# =============================================================================
-# Team credit
-# =============================================================================
-if brand_logo_b64:
-    st.markdown(
-        f"""
-        <div class="app-footer">
-            <div class="app-footer__logo-frame">
-                <img class="app-footer__logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">
+    # =============================================================================
+    # Dossier / guide / model scope
+    # =============================================================================
+    with info_tab:
+        section_header("06 / SYSTEM GUIDE", "Dossier", "Quick start, model scope and contact in one place.")
+
+        st.markdown(
+            """
+            <div class="dossier-grid">
+              <div class="dossier-panel">
+                <div class="dossier-panel__title">01 / QUICK START</div>
+                <div class="quick-steps">
+                  <div class="quick-step"><div class="quick-step__n">01 →</div><div class="quick-step__name">Forward</div><div class="quick-step__copy">Predict Sa / Sz from machining inputs.</div></div>
+                  <div class="quick-step"><div class="quick-step__n">02 →</div><div class="quick-step__name">Inverse</div><div class="quick-step__copy">Find candidate parameters for a target surface.</div></div>
+                  <div class="quick-step"><div class="quick-step__n">03 →</div><div class="quick-step__name">History</div><div class="quick-step__copy">Reuse prior predictions as a reference log.</div></div>
+                  <div class="quick-step"><div class="quick-step__n">04 →</div><div class="quick-step__name">Ra QC</div><div class="quick-step__copy">Check measured Ra against a drawing limit.</div></div>
+                  <div class="quick-step"><div class="quick-step__n">05 →</div><div class="quick-step__name">Validation</div><div class="quick-step__copy">Compare model output with labelled data.</div></div>
+                </div>
+              </div>
+              <div class="dossier-panel">
+                <div class="dossier-panel__title">02 / CONTACT</div>
+                <div class="contact-stack">
+                  <a class="contact-pill" href="tel:0703166078"><span class="contact-pill__icon">☎</span><span>0703166078</span></a>
+                  <a class="contact-pill" href="mailto:phuc.lerobotic@hcmut.edu.vn"><span class="contact-pill__icon">✉</span><span>phuc.lerobotic@hcmut.edu.vn</span></a>
+                </div>
+                <div class="roadmap-note" style="margin-top:1rem;">G-code generation is intentionally excluded. The current product stops at decision support and expert-level parameter reference. A persistent machining handbook can be considered later.</div>
+              </div>
             </div>
-            <div class="app-footer__text">
-                <strong>Engineered by Millcore.</strong><br>
-                MillTwin-Lite · physics-informed CNC surface intelligence / deployment interface.
+            <div class="dossier-panel" style="margin-bottom:1rem;">
+              <div class="dossier-panel__title">03 / MOTION LANGUAGE</div>
+              <div class="motion-list">
+                <div class="motion-item"><strong>Hover lift</strong>Controls rise slightly to signal interactivity.</div>
+                <div class="motion-item"><strong>Underline sweep</strong>Navigation reveals the magenta accent on hover.</div>
+                <div class="motion-item"><strong>Soft drift</strong>The engineering grid moves slowly in the background.</div>
+              </div>
             </div>
-            <div class="app-footer__stamp">MILLCORE // SMART MACHINING</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-else:
-    st.caption("Millcore Systems · Smart machining. Precise results.")
+            """,
+            unsafe_allow_html=True,
+        )
+
+        with st.expander("MODEL SCHEMA / DESIGN DOMAIN", expanded=False):
+            schema_rows = []
+            for feature in FEATURES:
+                low, high = clean_range(feature, raw_ranges)
+                schema_rows.append({
+                    "Column": feature,
+                    "Type": "Input",
+                    "Unit": {"n_rpm":"rpm","fz_mm_per_tooth":"mm/tooth","ap_mm":"mm","ae_mm":"mm","eps_r_um":"µm","eps_a_um":"µm"}.get(feature, ""),
+                    "UI range": f"{low:g} – {high:g}",
+                })
+            schema_rows.append({"Column": MILLING_MODE, "Type": "Fixed condition", "Unit": "categorical", "UI range": "down (fixed)"})
+            for target in TARGETS:
+                schema_rows.append({"Column": target, "Type": "Output", "Unit": "µm", "UI range": "-"})
+            st.dataframe(pd.DataFrame(schema_rows), width="stretch", hide_index=True)
+
+        with st.expander("MODEL INFORMATION", expanded=False):
+            info_summary = {
+                "model_type": info.get("model_type", "unknown"),
+                "selected_model": info.get("selected_model", info.get("selected_pidl_model", "unknown")),
+                "best_validation_accuracy_model": info.get("best_validation_accuracy_model", "unknown"),
+                "dataset_file": info.get("dataset_file", "dataset_endmill_v1_valid.csv"),
+                "dataset_rows": info.get("dataset_rows", "unknown"),
+                "split_method": info.get("split_method", "unknown"),
+                "split": info.get("split", {}),
+                "feature_columns": info.get("raw_input_columns", [*FEATURES, MILLING_MODE]),
+                "model_feature_columns": info.get("model_feature_columns", MODEL_FEATURES),
+                "target_columns": info.get("target_columns", TARGETS),
+                "fixed_tool": info.get("fixed_tool", {"D_mm": 6.0, "Zn": 4, "beta_deg": 36.0}),
+                "physical_scope": info.get("physical_scope", "unknown"),
+            }
+            st.json(info_summary)
+
+        with st.expander("ACCURACY / PHYSICS DIAGNOSTICS", expanded=False):
+            metrics_path = find_latest_project_file(["model_metrics.csv", "ablation_results.csv", "metrics.csv"])
+            if metrics_path is not None:
+                try:
+                    st.dataframe(pd.read_csv(metrics_path), width="stretch", hide_index=True)
+                except Exception as error:
+                    st.warning(f"Could not read {metrics_path}: {error}")
+            else:
+                st.info("No model metrics file found.")
+            physics_path = find_latest_project_file(["physics_diagnostics.csv", "physics_metrics.csv"])
+            if physics_path is not None:
+                try:
+                    st.dataframe(pd.read_csv(physics_path), width="stretch", hide_index=True)
+                except Exception as error:
+                    st.warning(f"Could not read {physics_path}: {error}")
+
+        with st.expander("LIMITATIONS / CLOUD DEPLOYMENT", expanded=False):
+            limitations = info.get("limitations", [
+                "Trained on D6 EndMill FSM synthetic labels only.",
+                "Current physics excludes vibration, chatter, material constitutive behavior and tool wear.",
+                "FEM or experimental validation is required before claiming real machining accuracy.",
+            ])
+            for item in limitations:
+                st.write(f"- {item}")
+            required_files = [
+                "app.py",
+                "logo.png",
+                "milltwin_pidl_sasz.onnx",
+                "info.json",
+                "model_metrics.csv",
+                "physics_diagnostics.csv",
+                "ablation_results.csv",
+                "model_card.md",
+                "requirements.txt",
+            ]
+            file_rows = []
+            for file in required_files:
+                located_file = find_latest_project_file([file])
+                file_rows.append({"File":file,"Exists":located_file is not None,"Location":str(located_file) if located_file else ""})
+            st.dataframe(pd.DataFrame(file_rows), width="stretch", hide_index=True)
+
+
+    # =============================================================================
+    # Team credit
+    # =============================================================================
+    if brand_logo_b64:
+        st.markdown(
+            f"""
+            <div class="app-footer">
+                <div class="app-footer__logo-frame">
+                    <img class="app-footer__logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">
+                </div>
+                <div class="app-footer__text">
+                    <strong>Engineered by Millcore.</strong><br>
+                    MillTwin-Lite · physics-informed CNC surface intelligence / deployment interface.
+                </div>
+                <div class="app-footer__stamp">MILLCORE // SMART MACHINING</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.caption("Millcore Systems · Smart machining. Precise results.")
