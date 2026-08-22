@@ -1188,6 +1188,62 @@ st.markdown(
         box-shadow: none !important;
     }
     [data-testid="stSidebar"] > div:first-child { padding-top: .65rem !important; }
+
+    /* Deployment-safe sidebar behavior.
+       Keep the console wide enough on desktop, but NEVER hide Streamlit's
+       collapse/reopen control. Hiding that control can leave Cloud users
+       stuck with a collapsed sidebar after a viewport/state change. */
+    @media (min-width: 1000px) {
+        section[data-testid="stSidebar"] {
+            min-width: 350px !important;
+            width: 350px !important;
+            max-width: 350px !important;
+        }
+        section[data-testid="stSidebar"] > div {
+            width: 350px !important;
+            min-width: 350px !important;
+            max-width: 350px !important;
+        }
+    }
+    [data-testid="stSidebarCollapsedControl"] {
+        z-index: 999999 !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] button {
+        background: var(--blue) !important;
+        color: var(--cream) !important;
+        border: 1px solid rgba(255,250,255,.35) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 24px rgba(10,36,99,.18) !important;
+    }
+    [data-testid="stSidebarCollapseButton"] button {
+        color: var(--cream) !important;
+    }
+
+    /* Paired numeric entry + slider. Users can type a precise value or drag. */
+    .machine-input-label {
+        margin: .15rem 0 .18rem;
+        color: var(--cream);
+        font: 600 .70rem/1.25 var(--mono);
+        letter-spacing: .035em;
+    }
+    .machine-input-hint {
+        margin: -.18rem 0 .38rem;
+        color: rgba(255,244,232,.56);
+        font: 500 .58rem/1.2 var(--mono);
+        letter-spacing: .025em;
+    }
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] {
+        margin-bottom: -.15rem !important;
+    }
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] input {
+        font-family: var(--mono) !important;
+        font-weight: 600 !important;
+        color: var(--cream) !important;
+    }
+    [data-testid="stSidebar"] div[data-testid="stSlider"] {
+        margin-top: -.1rem !important;
+        margin-bottom: .55rem !important;
+    }
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
@@ -1235,6 +1291,17 @@ st.markdown(
     }
     .sidebar-brand__title { display:none !important; }
     .sidebar-brand__meta { display:none !important; }
+    .machine-setup-header {
+        display:flex; align-items:center; justify-content:space-between;
+        margin:.9rem .05rem .55rem; padding:.2rem 0 .55rem;
+        border-bottom:1px solid rgba(255,250,255,.20);
+        color:var(--cream); font:700 .72rem/1.25 var(--mono);
+        letter-spacing:.10em; text-transform:uppercase;
+    }
+    .machine-setup-sub {
+        margin:0 .05rem .7rem; color:rgba(255,250,255,.62);
+        font:500 .60rem/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase;
+    }
     .side-status {
         display:flex; justify-content:space-between; align-items:center;
         margin:.55rem .05rem .9rem; padding:.72rem .75rem;
@@ -1526,6 +1593,195 @@ st.markdown(
     /* ---------------- Footer ---------------- */
     .app-footer { border-top:1px solid rgba(10,36,99,.16) !important; padding-top:1rem !important; margin-top:2rem !important; }
     .app-footer__logo { width:78px !important; }
+
+    /* ---------------- Targeted contrast / logo fixes ---------------- */
+    /* Fill the footer brand slot instead of leaving the logo floating inside a white frame. */
+    .app-footer__logo-frame {
+        padding:0 !important;
+        overflow:hidden !important;
+        background:var(--blue) !important;
+        border:0 !important;
+        min-height:84px !important;
+        display:flex !important;
+        align-items:stretch !important;
+    }
+    .app-footer__logo {
+        width:100% !important;
+        height:100% !important;
+        min-height:84px !important;
+        max-height:none !important;
+        object-fit:cover !important;
+        display:block !important;
+    }
+
+    /* Sidebar expander headings: cream on navy when closed; navy on cream when opened. */
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        background:transparent !important;
+        color:var(--cream) !important;
+        transition:background .2s ease,color .2s ease !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary span,
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
+        color:inherit !important;
+        fill:currentColor !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary {
+        background:var(--cream) !important;
+        color:var(--blue) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary p,
+    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary span,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary p,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary span {
+        color:var(--blue) !important;
+    }
+
+    /* Primary CTA text must stay high-contrast over the magenta surface. */
+    .stButton > button[kind="primary"],
+    .stButton > button[kind="primary"] p,
+    .stButton > button[kind="primary"] span,
+    .stButton > button[kind="primary"] svg,
+    .stDownloadButton > button[kind="primary"],
+    .stDownloadButton > button[kind="primary"] p,
+    .stDownloadButton > button[kind="primary"] span,
+    .stDownloadButton > button[kind="primary"] svg {
+        color:var(--cream) !important;
+        fill:currentColor !important;
+    }
+    .stButton > button[kind="primary"]:hover,
+    .stButton > button[kind="primary"]:hover p,
+    .stButton > button[kind="primary"]:hover span {
+        color:#FFFFFF !important;
+    }
+
+
+    /* ---------------- Final contrast hardening ---------------- */
+    /*
+       Streamlit 1.62 applies text color to nested <p>/<span> nodes in several
+       controls. These rules intentionally sit at the END of the theme so the
+       deployed app keeps the same contrast as the design mockups.
+    */
+
+    /* 1) Brand artwork: the supplied logo.png contains generous navy margins.
+       Crop/scale it visually so the mark actually fills its slot. */
+    .sidebar-brand__logo-frame,
+    .app-footer__logo-frame {
+        overflow: hidden !important;
+        background: var(--blue) !important;
+    }
+    .sidebar-brand__logo {
+        width: 100% !important;
+        height: 150px !important;
+        max-height: none !important;
+        object-fit: cover !important;
+        object-position: center !important;
+        transform: scale(2.15) !important;
+        transform-origin: center !important;
+        display: block !important;
+    }
+    .hero-brand-logo {
+        object-fit: cover !important;
+        object-position: center !important;
+        transform: scale(2.15) !important;
+        transform-origin: center !important;
+    }
+    .app-footer__logo {
+        object-fit: cover !important;
+        object-position: center !important;
+        transform: scale(2.35) !important;
+        transform-origin: center !important;
+    }
+
+    /* 2) Sidebar expander contrast.
+       CLOSED = navy surface / cream type.
+       OPEN   = cream surface / navy type. */
+    [data-testid="stSidebar"] [data-testid="stExpander"] details:not([open]) > summary,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details:not([open]) > summary * {
+        background: transparent !important;
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary * {
+        background: var(--cream) !important;
+        color: var(--blue) !important;
+        -webkit-text-fill-color: var(--blue) !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary svg,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary svg * {
+        color: var(--blue) !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] details:not([open]) > summary svg,
+    [data-testid="stSidebar"] [data-testid="stExpander"] details:not([open]) > summary svg * {
+        color: var(--cream) !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    /* Fixed MACHINE SETUP heading is always on navy, so keep it cream. */
+    .machine-setup-header,
+    .machine-setup-header span,
+    .machine-setup-sub {
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+    }
+
+    /* Sidebar editable fields: dark field -> cream value; light +/- steppers -> navy. */
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] input,
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] input::placeholder,
+    [data-testid="stSidebar"] [data-baseweb="select"] input,
+    [data-testid="stSidebar"] [data-baseweb="select"] span {
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+    }
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] button {
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+        background: rgba(255,255,255,.055) !important;
+        border-color: rgba(255,250,255,.16) !important;
+    }
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] button svg,
+    [data-testid="stSidebar"] div[data-testid="stNumberInput"] button svg * {
+        color: var(--cream) !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+    }
+
+    /* 3) Magenta primary CTA: NEVER inherit the generic muted paragraph color. */
+    div[data-testid="stButton"] button[kind="primary"],
+    div[data-testid="stButton"] button[data-testid="stBaseButton-primary"],
+    div[data-testid="stButton"] button[kind="primary"] *,
+    div[data-testid="stButton"] button[data-testid="stBaseButton-primary"] *,
+    div[data-testid="stDownloadButton"] button[kind="primary"],
+    div[data-testid="stDownloadButton"] button[data-testid="stBaseButton-primary"],
+    div[data-testid="stDownloadButton"] button[kind="primary"] *,
+    div[data-testid="stDownloadButton"] button[data-testid="stBaseButton-primary"] * {
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+        fill: currentColor !important;
+        stroke: currentColor !important;
+        opacity: 1 !important;
+    }
+    div[data-testid="stButton"] button[kind="primary"]:hover,
+    div[data-testid="stButton"] button[data-testid="stBaseButton-primary"]:hover,
+    div[data-testid="stButton"] button[kind="primary"]:hover *,
+    div[data-testid="stButton"] button[data-testid="stBaseButton-primary"]:hover * {
+        color: #FFFFFF !important;
+        -webkit-text-fill-color: #FFFFFF !important;
+    }
+
+    /* Selected navigation tab = navy block + cream type, including nested text. */
+    .stTabs [aria-selected="true"],
+    .stTabs [aria-selected="true"] *,
+    .stTabs [data-baseweb="tab"][aria-selected="true"],
+    .stTabs [data-baseweb="tab"][aria-selected="true"] * {
+        color: var(--cream) !important;
+        -webkit-text-fill-color: var(--cream) !important;
+    }
 
     /* ---------------- Motion accessibility ---------------- */
     @media (prefers-reduced-motion: reduce) {
@@ -1886,15 +2142,15 @@ def append_prediction_history(
 
 def reuse_history_record(record: dict) -> None:
     """Load a saved machining condition back into the Forward-model sidebar."""
-    st.session_state["forward_n"] = int(round(float(record["n_rpm"])))
-    st.session_state["forward_fz"] = float(record["fz_mm_per_tooth"])
-    st.session_state["forward_ap"] = float(record["ap_mm"])
+    set_linked_machine_value("forward_n", record["n_rpm"], integer=True)
+    set_linked_machine_value("forward_fz", record["fz_mm_per_tooth"])
+    set_linked_machine_value("forward_ap", record["ap_mm"])
     mode = str(record.get("milling_mode", "down")).lower()
     st.session_state["forward_mode"] = mode
     if mode != "slot":
-        st.session_state["forward_ae_partial"] = float(record["ae_mm"])
-    st.session_state["forward_er"] = float(record["eps_r_um"])
-    st.session_state["forward_ea"] = float(record["eps_a_um"])
+        set_linked_machine_value("forward_ae_partial", record["ae_mm"])
+    set_linked_machine_value("forward_er", record["eps_r_um"])
+    set_linked_machine_value("forward_ea", record["eps_a_um"])
     st.session_state["target_sa"] = float(record["Sa_limit_um"])
     st.session_state["target_sz"] = float(record["Sz_limit_um"])
     st.session_state.last_prediction = None
@@ -2047,6 +2303,94 @@ def fem_metrics(frame: pd.DataFrame, pred: np.ndarray) -> pd.DataFrame:
 
 
 # =============================================================================
+# Linked machine-input controls
+# =============================================================================
+def _coerce_linked_value(value, integer: bool):
+    return int(round(float(value))) if integer else float(value)
+
+
+def _sync_machine_input(source_key: str, target_key: str, canonical_key: str, integer: bool) -> None:
+    """Synchronize a number input and slider through one canonical session value."""
+    value = _coerce_linked_value(st.session_state[source_key], integer)
+    st.session_state[target_key] = value
+    st.session_state[canonical_key] = value
+
+
+def set_linked_machine_value(canonical_key: str, value, integer: bool = False) -> None:
+    """Set canonical, typed and slider states together (used by History -> Reuse)."""
+    value = _coerce_linked_value(value, integer)
+    st.session_state[canonical_key] = value
+    st.session_state[f"{canonical_key}__number"] = value
+    st.session_state[f"{canonical_key}__slider"] = value
+
+
+def linked_number_slider(
+    label: str,
+    min_value,
+    max_value,
+    default,
+    step,
+    *,
+    key: str,
+    fmt: str | None = None,
+    unit_hint: str = "TYPE OR DRAG",
+    integer: bool = False,
+):
+    """Render a bidirectionally-linked number input and slider in the sidebar."""
+    number_key = f"{key}__number"
+    slider_key = f"{key}__slider"
+
+    default_value = _coerce_linked_value(default, integer)
+    min_v = _coerce_linked_value(min_value, integer)
+    max_v = _coerce_linked_value(max_value, integer)
+    step_v = _coerce_linked_value(step, integer)
+
+    # Respect a canonical value already loaded by History/reuse; otherwise initialize it.
+    if key not in st.session_state:
+        st.session_state[key] = default_value
+    canonical = _coerce_linked_value(st.session_state[key], integer)
+    canonical = max(min_v, min(max_v, canonical))
+    st.session_state[key] = canonical
+
+    if number_key not in st.session_state:
+        st.session_state[number_key] = canonical
+    if slider_key not in st.session_state:
+        st.session_state[slider_key] = canonical
+
+    # If an external action updated only the canonical value, bring both controls with it.
+    if st.session_state[number_key] != canonical and st.session_state[slider_key] != canonical:
+        st.session_state[number_key] = canonical
+        st.session_state[slider_key] = canonical
+
+    st.markdown(f'<div class="machine-input-label">{label}</div>', unsafe_allow_html=True)
+    st.number_input(
+        label,
+        min_value=min_v,
+        max_value=max_v,
+        step=step_v,
+        format=fmt,
+        key=number_key,
+        label_visibility="collapsed",
+        on_change=_sync_machine_input,
+        args=(number_key, slider_key, key, integer),
+    )
+    st.slider(
+        f"{label} slider",
+        min_value=min_v,
+        max_value=max_v,
+        step=step_v,
+        format=fmt,
+        key=slider_key,
+        label_visibility="collapsed",
+        on_change=_sync_machine_input,
+        args=(slider_key, number_key, key, integer),
+    )
+    st.markdown(f'<div class="machine-input-hint">{unit_hint}</div>', unsafe_allow_html=True)
+
+    return _coerce_linked_value(st.session_state[key], integer)
+
+
+# =============================================================================
 # Load info/model and application shell
 # =============================================================================
 brand_logo_b64 = get_base64_file(str(LOGO_PATH))
@@ -2094,20 +2438,53 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-with st.sidebar.expander("02 / MACHINE SETUP", expanded=True):
-    n_min_ui, n_max_ui = clean_range("n_rpm", raw_ranges)
-    fz_min_ui, fz_max_ui = clean_range("fz_mm_per_tooth", raw_ranges)
-    ap_min_ui, ap_max_ui = clean_range("ap_mm", raw_ranges)
-    er_min_ui, er_max_ui = clean_range("eps_r_um", raw_ranges)
-    ea_min_ui, ea_max_ui = clean_range("eps_a_um", raw_ranges)
+# Keep the six model inputs permanently visible inside the sidebar.
+# This intentionally avoids placing MACHINE SETUP inside an expander because
+# Streamlit Cloud can restore a collapsed expander/sidebar state per browser.
+st.sidebar.markdown(
+    '<div class="machine-setup-header"><span>02 / MACHINE SETUP</span><span>6 INPUTS</span></div>'
+    '<div class="machine-setup-sub">Type an exact value or drag the linked slider.</div>',
+    unsafe_allow_html=True,
+)
 
-    n = st.slider("Spindle speed n [rpm]", int(n_min_ui), int(n_max_ui), 4000, 100, key="forward_n")
-    fz = st.slider("Feed per tooth fz [mm/tooth]", float(fz_min_ui), float(fz_max_ui), 0.07, 0.005, format="%.3f", key="forward_fz")
-    ap = st.slider("Axial depth ap [mm]", float(ap_min_ui), float(ap_max_ui), 0.90, 0.05, format="%.2f", key="forward_ap")
-    milling_mode = st.selectbox("Milling mode", MILLING_MODES, index=0, key="forward_mode")
-    ae = st.slider("Radial engagement ae [mm]", AE_PARTIAL_MIN_MM, AE_PARTIAL_MAX_MM, 1.5, 0.1, format="%.1f", key="forward_ae_partial")
-    eps_r = st.slider("Radial runout εr [µm]", float(er_min_ui), float(er_max_ui), 0.0, 0.1, format="%.1f", key="forward_er")
-    eps_a = st.slider("Axial runout εa [µm]", float(ea_min_ui), float(ea_max_ui), 2.5, 0.1, format="%.1f", key="forward_ea")
+n_min_ui, n_max_ui = clean_range("n_rpm", raw_ranges)
+fz_min_ui, fz_max_ui = clean_range("fz_mm_per_tooth", raw_ranges)
+ap_min_ui, ap_max_ui = clean_range("ap_mm", raw_ranges)
+er_min_ui, er_max_ui = clean_range("eps_r_um", raw_ranges)
+ea_min_ui, ea_max_ui = clean_range("eps_a_um", raw_ranges)
+
+n = linked_number_slider(
+    "Spindle speed n [rpm]", int(n_min_ui), int(n_max_ui), 4000, 100,
+    key="forward_n", fmt="%d", unit_hint="RPM · TYPE OR DRAG", integer=True,
+)
+fz = linked_number_slider(
+    "Feed per tooth fz [mm/tooth]", float(fz_min_ui), float(fz_max_ui), 0.07, 0.005,
+    key="forward_fz", fmt="%.3f", unit_hint="MM/TOOTH · TYPE OR DRAG",
+)
+ap = linked_number_slider(
+    "Axial depth ap [mm]", float(ap_min_ui), float(ap_max_ui), 0.90, 0.05,
+    key="forward_ap", fmt="%.2f", unit_hint="MM · TYPE OR DRAG",
+)
+
+milling_mode = st.selectbox(
+    "Milling mode", MILLING_MODES,
+    index=MILLING_MODES.index(st.session_state.get("forward_mode", "down"))
+    if st.session_state.get("forward_mode", "down") in MILLING_MODES else 0,
+    key="forward_mode",
+)
+
+ae = linked_number_slider(
+    "Radial engagement ae [mm]", AE_PARTIAL_MIN_MM, AE_PARTIAL_MAX_MM, 1.5, 0.1,
+    key="forward_ae_partial", fmt="%.1f", unit_hint="MM · TYPE OR DRAG",
+)
+eps_r = linked_number_slider(
+    "Radial runout εr [µm]", float(er_min_ui), float(er_max_ui), 0.0, 0.1,
+    key="forward_er", fmt="%.1f", unit_hint="µM · TYPE OR DRAG",
+)
+eps_a = linked_number_slider(
+    "Axial runout εa [µm]", float(ea_min_ui), float(ea_max_ui), 2.5, 0.1,
+    key="forward_ea", fmt="%.1f", unit_hint="µM · TYPE OR DRAG",
+)
 
 hero_logo = (
     f'<img class="hero-brand-logo" src="data:image/png;base64,{brand_logo_b64}" alt="Millcore logo">'
@@ -2188,7 +2565,7 @@ with forward_tab:
             step=0.1, format="%.3f", key="target_sz",
         )
         run_clicked = st.button(
-            "RUN PIDL INFERENCE", type="primary", use_container_width=True,
+            "RUN PIDL INFERENCE", type="primary", width="stretch",
             disabled=model_session is None,
         )
 
@@ -2262,13 +2639,13 @@ with forward_tab:
     in_domain = bool(range_df.empty or range_df["In domain"].all())
 
     with st.expander("PROCESS DOMAIN / DIAGNOSTICS", expanded=False):
-        st.dataframe(range_df, use_container_width=True, hide_index=True)
+        st.dataframe(range_df, width="stretch", hide_index=True)
         if result:
             d1, d2 = st.columns(2)
             with d1:
-                st.plotly_chart(roughness_chart("Sa", result["Sa"], target_sa), use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(roughness_chart("Sa", result["Sa"], target_sa), width="stretch", config={"displayModeBar": False})
             with d2:
-                st.plotly_chart(roughness_chart("Sz", result["Sz"], target_sz), use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(roughness_chart("Sz", result["Sz"], target_sz), width="stretch", config={"displayModeBar": False})
             physics_ok = result["Sa"] > 0 and result["Sz"] >= 2.0 * result["Sa"]
             st.caption(f"Geometry consistency: {'PASS' if physics_ok else 'REVIEW'} · Model domain: {'IN' if in_domain else 'OUT'}")
 
@@ -2315,7 +2692,7 @@ with inverse_tab:
             feed_max = st.number_input("Max feed F [mm/min] · 0 = off", min_value=0.0, value=0.0, step=100.0, key="inverse_feed_max")
             mrr_max = st.number_input("Max MRR [mm³/min] · 0 = off", min_value=0.0, value=0.0, step=1000.0, key="inverse_mrr_max")
 
-        run_inverse = st.button("RUN INVERSE SEARCH", type="primary", use_container_width=True)
+        run_inverse = st.button("RUN INVERSE SEARCH", type="primary", width="stretch")
 
     if run_inverse:
         if model_session is None:
@@ -2387,8 +2764,8 @@ with inverse_tab:
             table_df = display_df[[
                 "n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","F_mm_min","MRR_mm3_min","feasible"
             ]]
-            st.dataframe(table_df, use_container_width=True, hide_index=True)
-            st.download_button("EXPORT RESULTS · CSV", table_df.to_csv(index=False), "inverse_results.csv", "text/csv", use_container_width=True)
+            st.dataframe(table_df, width="stretch", hide_index=True)
+            st.download_button("EXPORT RESULTS · CSV", table_df.to_csv(index=False), "inverse_results.csv", "text/csv", width="stretch")
 
 
 # =============================================================================
@@ -2444,7 +2821,7 @@ with ra_tab:
         ra_check_clicked = st.button(
             "CHECK RA QUALITY",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             key="run_ra_quality_check",
         )
 
@@ -2571,12 +2948,12 @@ with history_tab:
             decision_filter = st.selectbox("Decision filter", ["ALL", "PASS", "REVIEW"], key="history_decision_filter")
         with export_col:
             st.write("")
-            st.download_button("EXPORT HISTORY · CSV", history_df.to_csv(index=False), "milltwin_prediction_history.csv", "text/csv", use_container_width=True)
+            st.download_button("EXPORT HISTORY · CSV", history_df.to_csv(index=False), "milltwin_prediction_history.csv", "text/csv", width="stretch")
 
         view_df = history_df.copy()
         if decision_filter != "ALL": view_df = view_df[view_df["decision"] == decision_filter]
         display_columns = ["created_at","n_rpm","fz_mm_per_tooth","ap_mm","ae_mm","Sa_pred_um","Sz_pred_um","decision","note"]
-        st.dataframe(view_df[display_columns].sort_values("created_at", ascending=False), use_container_width=True, hide_index=True)
+        st.dataframe(view_df[display_columns].sort_values("created_at", ascending=False), width="stretch", hide_index=True)
 
         st.markdown('<div class="ui-card-label">SAVED RUN ACTIONS</div>', unsafe_allow_html=True)
         record_indices = list(range(len(history) - 1, -1, -1))
@@ -2596,18 +2973,18 @@ with history_tab:
         note_value = st.text_area("Engineering note", value=str(selected_record.get("note", "")), key=note_key, placeholder="Process note…")
         a1,a2,a3,a4 = st.columns(4)
         with a1:
-            st.button("REUSE PARAMETERS", type="primary", use_container_width=True, on_click=reuse_history_record, args=(selected_record,))
+            st.button("REUSE PARAMETERS", type="primary", width="stretch", on_click=reuse_history_record, args=(selected_record,))
         with a2:
-            if st.button("SAVE NOTE", use_container_width=True):
+            if st.button("SAVE NOTE", width="stretch"):
                 st.session_state.prediction_history[int(selected_index)]["note"] = note_value
                 st.success("Note saved.")
         with a3:
-            if st.button("DELETE RECORD", use_container_width=True):
+            if st.button("DELETE RECORD", width="stretch"):
                 del st.session_state.prediction_history[int(selected_index)]
                 st.session_state.pop("history_selected_index", None)
                 st.rerun()
         with a4:
-            if st.button("CLEAR HISTORY", use_container_width=True):
+            if st.button("CLEAR HISTORY", width="stretch"):
                 st.session_state.prediction_history = []
                 st.session_state.pop("history_selected_index", None)
                 st.rerun()
@@ -2682,7 +3059,7 @@ with fem_tab:
                                 "MAPE_percent": "{:.3f}",
                             }
                         ),
-                        use_container_width=True,
+                        width="stretch",
                         hide_index=True,
                     )
 
@@ -2706,7 +3083,7 @@ with fem_tab:
                                 "Sz_abs_error_um": "{:.3f}",
                             }
                         ),
-                        use_container_width=True,
+                        width="stretch",
                     )
 
                 st.download_button(
@@ -2714,7 +3091,7 @@ with fem_tab:
                     data=result_fem.to_csv(index=False),
                     file_name="fem_comparison.csv",
                     mime="text/csv",
-                    use_container_width=True,
+                    width="stretch",
                 )
 
         except Exception as error:
@@ -2776,7 +3153,7 @@ with info_tab:
         schema_rows.append({"Column": MILLING_MODE, "Type": "Fixed condition", "Unit": "categorical", "UI range": "down (fixed)"})
         for target in TARGETS:
             schema_rows.append({"Column": target, "Type": "Output", "Unit": "µm", "UI range": "-"})
-        st.dataframe(pd.DataFrame(schema_rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(schema_rows), width="stretch", hide_index=True)
 
     with st.expander("MODEL INFORMATION", expanded=False):
         info_summary = {
@@ -2799,7 +3176,7 @@ with info_tab:
         metrics_path = find_latest_project_file(["model_metrics.csv", "ablation_results.csv", "metrics.csv"])
         if metrics_path is not None:
             try:
-                st.dataframe(pd.read_csv(metrics_path), use_container_width=True, hide_index=True)
+                st.dataframe(pd.read_csv(metrics_path), width="stretch", hide_index=True)
             except Exception as error:
                 st.warning(f"Could not read {metrics_path}: {error}")
         else:
@@ -2807,11 +3184,11 @@ with info_tab:
         physics_path = find_latest_project_file(["physics_diagnostics.csv", "physics_metrics.csv"])
         if physics_path is not None:
             try:
-                st.dataframe(pd.read_csv(physics_path), use_container_width=True, hide_index=True)
+                st.dataframe(pd.read_csv(physics_path), width="stretch", hide_index=True)
             except Exception as error:
                 st.warning(f"Could not read {physics_path}: {error}")
 
-    with st.expander("LIMITATIONS / DEPLOYMENT FILES", expanded=False):
+    with st.expander("LIMITATIONS / CLOUD DEPLOYMENT", expanded=False):
         limitations = info.get("limitations", [
             "Trained on D6 EndMill FSM synthetic labels only.",
             "Current physics excludes vibration, chatter, material constitutive behavior and tool wear.",
@@ -2820,15 +3197,21 @@ with info_tab:
         for item in limitations:
             st.write(f"- {item}")
         required_files = [
-            "dataset_endmill_v1_valid.csv","05_train_pidl.py","wp3_physics.py","app.py",
-            "milltwin_pidl_sasz.onnx","model.onnx","mlp_model.pt","pidl_model.pt","info.json",
-            "model_metrics.csv","physics_diagnostics.csv","ablation_results.csv","predictions.csv","model_card.md",
+            "app.py",
+            "logo.png",
+            "milltwin_pidl_sasz.onnx",
+            "info.json",
+            "model_metrics.csv",
+            "physics_diagnostics.csv",
+            "ablation_results.csv",
+            "model_card.md",
+            "requirements.txt",
         ]
         file_rows = []
         for file in required_files:
             located_file = find_latest_project_file([file])
             file_rows.append({"File":file,"Exists":located_file is not None,"Location":str(located_file) if located_file else ""})
-        st.dataframe(pd.DataFrame(file_rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(file_rows), width="stretch", hide_index=True)
 
 
 # =============================================================================
