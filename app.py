@@ -1219,6 +1219,21 @@ st.markdown(
         color: var(--cream) !important;
     }
 
+    /* Streamlit Cloud 1.62+: keep sidebar controls usable and visible. */
+    [data-testid="stSidebarCollapsedControl"],
+    [data-testid="stSidebarCollapseButton"] {
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+    [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important;
+        top: .75rem !important;
+        left: .75rem !important;
+        right: auto !important;
+        bottom: auto !important;
+    }
+
     /* Paired numeric entry + slider. Users can type a precise value or drag. */
     .machine-input-label {
         margin: .15rem 0 .18rem;
@@ -2362,8 +2377,11 @@ def linked_number_slider(
         st.session_state[number_key] = canonical
         st.session_state[slider_key] = canonical
 
-    st.markdown(f'<div class="machine-input-label">{label}</div>', unsafe_allow_html=True)
-    st.number_input(
+    # IMPORTANT: this helper can be called from the main script, so every widget
+    # must be explicitly mounted in st.sidebar.  Using plain st.number_input /
+    # st.slider here renders them in the main page on Streamlit Cloud.
+    st.sidebar.markdown(f'<div class="machine-input-label">{label}</div>', unsafe_allow_html=True)
+    st.sidebar.number_input(
         label,
         min_value=min_v,
         max_value=max_v,
@@ -2374,7 +2392,7 @@ def linked_number_slider(
         on_change=_sync_machine_input,
         args=(number_key, slider_key, key, integer),
     )
-    st.slider(
+    st.sidebar.slider(
         f"{label} slider",
         min_value=min_v,
         max_value=max_v,
@@ -2385,7 +2403,7 @@ def linked_number_slider(
         on_change=_sync_machine_input,
         args=(slider_key, number_key, key, integer),
     )
-    st.markdown(f'<div class="machine-input-hint">{unit_hint}</div>', unsafe_allow_html=True)
+    st.sidebar.markdown(f'<div class="machine-input-hint">{unit_hint}</div>', unsafe_allow_html=True)
 
     return _coerce_linked_value(st.session_state[key], integer)
 
@@ -2466,7 +2484,7 @@ ap = linked_number_slider(
     key="forward_ap", fmt="%.2f", unit_hint="MM · TYPE OR DRAG",
 )
 
-milling_mode = st.selectbox(
+milling_mode = st.sidebar.selectbox(
     "Milling mode", MILLING_MODES,
     index=MILLING_MODES.index(st.session_state.get("forward_mode", "down"))
     if st.session_state.get("forward_mode", "down") in MILLING_MODES else 0,
