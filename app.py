@@ -1527,68 +1527,6 @@ st.markdown(
     .app-footer { border-top:1px solid rgba(10,36,99,.16) !important; padding-top:1rem !important; margin-top:2rem !important; }
     .app-footer__logo { width:78px !important; }
 
-    /* ---------------- Targeted contrast / logo fixes ---------------- */
-    /* Fill the footer brand slot instead of leaving the logo floating inside a white frame. */
-    .app-footer__logo-frame {
-        padding:0 !important;
-        overflow:hidden !important;
-        background:var(--blue) !important;
-        border:0 !important;
-        min-height:84px !important;
-        display:flex !important;
-        align-items:stretch !important;
-    }
-    .app-footer__logo {
-        width:100% !important;
-        height:100% !important;
-        min-height:84px !important;
-        max-height:none !important;
-        object-fit:cover !important;
-        display:block !important;
-    }
-
-    /* Sidebar expander headings: cream on navy when closed; navy on cream when opened. */
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-        background:transparent !important;
-        color:var(--cream) !important;
-        transition:background .2s ease,color .2s ease !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary span,
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary svg {
-        color:inherit !important;
-        fill:currentColor !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary,
-    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary {
-        background:var(--cream) !important;
-        color:var(--blue) !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary p,
-    [data-testid="stSidebar"] [data-testid="stExpander"][open] > summary span,
-    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary p,
-    [data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary span {
-        color:var(--blue) !important;
-    }
-
-    /* Primary CTA text must stay high-contrast over the magenta surface. */
-    .stButton > button[kind="primary"],
-    .stButton > button[kind="primary"] p,
-    .stButton > button[kind="primary"] span,
-    .stButton > button[kind="primary"] svg,
-    .stDownloadButton > button[kind="primary"],
-    .stDownloadButton > button[kind="primary"] p,
-    .stDownloadButton > button[kind="primary"] span,
-    .stDownloadButton > button[kind="primary"] svg {
-        color:var(--cream) !important;
-        fill:currentColor !important;
-    }
-    .stButton > button[kind="primary"]:hover,
-    .stButton > button[kind="primary"]:hover p,
-    .stButton > button[kind="primary"]:hover span {
-        color:#FFFFFF !important;
-    }
-
     /* ---------------- Motion accessibility ---------------- */
     @media (prefers-reduced-motion: reduce) {
         *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
@@ -2873,7 +2811,7 @@ with info_tab:
             except Exception as error:
                 st.warning(f"Could not read {physics_path}: {error}")
 
-    with st.expander("LIMITATIONS / CLOUD DEPLOYMENT", expanded=False):
+    with st.expander("LIMITATIONS / DEPLOYMENT FILES", expanded=False):
         limitations = info.get("limitations", [
             "Trained on D6 EndMill FSM synthetic labels only.",
             "Current physics excludes vibration, chatter, material constitutive behavior and tool wear.",
@@ -2882,15 +2820,9 @@ with info_tab:
         for item in limitations:
             st.write(f"- {item}")
         required_files = [
-            "app.py",
-            "logo.png",
-            "milltwin_pidl_sasz.onnx",
-            "info.json",
-            "model_metrics.csv",
-            "physics_diagnostics.csv",
-            "ablation_results.csv",
-            "model_card.md",
-            "requirements.txt",
+            "dataset_endmill_v1_valid.csv","05_train_pidl.py","wp3_physics.py","app.py",
+            "milltwin_pidl_sasz.onnx","model.onnx","mlp_model.pt","pidl_model.pt","info.json",
+            "model_metrics.csv","physics_diagnostics.csv","ablation_results.csv","predictions.csv","model_card.md",
         ]
         file_rows = []
         for file in required_files:
