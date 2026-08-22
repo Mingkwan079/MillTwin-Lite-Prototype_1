@@ -1,0 +1,7 @@
+# Runtime-only dependencies for MillTwin-Lite Streamlit deployment.
+# Training-only packages (torch, xgboost, shap, optuna, mlflow, etc.) are intentionally omitted.
+streamlit>=1.37,<2
+numpy>=1.26,<3
+pandas>=2.0,<4
+plotly>=5.22,<7
+onnxruntime>=1.18,<2

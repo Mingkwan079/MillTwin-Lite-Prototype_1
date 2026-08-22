@@ -1,0 +1,98 @@
+{
+  "model_type": "Physics-guided PIDL surrogate for D6 helical end milling",
+  "selected_model": "PIDL_MLP_D6",
+  "dataset_file": "dataset_project_all_completed.csv",
+  "dataset_rows": 500,
+  "split_method": "70/15/15 fixed split stratified by regime",
+  "split": {
+    "train": 350,
+    "val": 75,
+    "test": 75
+  },
+  "raw_input_columns": [
+    "n_rpm",
+    "fz_mm_per_tooth",
+    "ap_mm",
+    "ae_mm",
+    "eps_r_um",
+    "eps_a_um"
+  ],
+  "model_feature_columns": [
+    "n_rpm",
+    "fz_mm_per_tooth",
+    "ap_mm",
+    "ae_mm",
+    "eps_r_um",
+    "eps_a_um"
+  ],
+  "target_columns": [
+    "Sa_um",
+    "Sz_um"
+  ],
+  "input_ranges": {
+    "n_rpm": {
+      "min": 1618.4407,
+      "max": 7993.9483
+    },
+    "fz_mm_per_tooth": {
+      "min": 0.020032,
+      "max": 0.119927
+    },
+    "ap_mm": {
+      "min": 0.301984,
+      "max": 1.498713
+    },
+    "ae_mm": {
+      "min": 0.300515,
+      "max": 2.99145
+    },
+    "eps_r_um": {
+      "min": -9.974,
+      "max": 9.89252
+    },
+    "eps_a_um": {
+      "min": 0.00188,
+      "max": 4.99725
+    }
+  },
+  "fixed_milling_mode": "down",
+  "regime_policy": "used for stratified split/subgroup metrics only; not an inference feature",
+  "fixed_tool": {
+    "D_mm": 6.0,
+    "R_mm": 3.0,
+    "Zn": 4,
+    "beta_deg": 36.0,
+    "flute_length_mm": 16.0,
+    "bottom_dish_angle_deg": 1.0,
+    "runout_expansion": "signed [0, eps, 2eps, 3eps] per flute"
+  },
+  "training_hparams": {
+    "hidden_dims": [
+      48,
+      96
+    ],
+    "learning_rate": 0.002062008591197922,
+    "weight_decay": 0.0007509033627837555,
+    "lambda_n": 0.48294631064289933,
+    "dropout": 0.0,
+    "batch_size": 128
+  },
+  "physics_loss": {
+    "L_data": "MSE on standardized Sa/Sz",
+    "L_n": "counterfactual n-invariance at fixed fz/ap/ae/runout",
+    "lambda_n": 0.48294631064289933,
+    "L_fz": "pairwise ReLU increasing-fz penalty; exact FSM audit gate required",
+    "lambda_fz": 0.0,
+    "hard_output": "Sa=Softplus(u); Sz=2*Sa+Softplus(v)"
+  },
+  "limitations": [
+    "Training targets are D6 FSM simulation outputs; external FEM/experiment remains a validation gate.",
+    "Current dataset contains down milling only; mode is fixed, not a production input.",
+    "Ra_th=fz^2/(8R) is not used as a D6 physics law.",
+    "n-invariance is scoped to the geometry-only FSM, not real milling with vibration/chatter/wear.",
+    "Do not claim extrapolation accuracy outside the training domain."
+  ],
+  "best_validation_accuracy_model": "PIDL_MLP_D6",
+  "selection_rule": "lowest mean validation MAPE; test set not used for model selection",
+  "test_metrics_file": "model_metrics.csv"
+}
