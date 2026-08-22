@@ -1373,7 +1373,7 @@ st.markdown(
     @keyframes arcFloat { to { transform:translate(-22px,18px) rotate(4deg); } }
     .brutal-hero__main {
         z-index:2 !important; padding:1.35rem 1.7rem !important; display:grid !important;
-        grid-template-columns:140px 1fr !important; column-gap:1.35rem !important; align-items:center !important;
+        grid-template-columns:150px minmax(0, 1fr) !important; column-gap:1.35rem !important; align-items:center !important;
         border:0 !important; background:transparent !important;
     }
     .hero-brand-logo { width:130px; height:130px; object-fit:contain; border-right:1px solid rgba(255,255,255,.30); padding-right:1.25rem; }
@@ -1707,10 +1707,17 @@ st.markdown(
         display: block !important;
     }
     .hero-brand-logo {
-        object-fit: cover !important;
-        object-position: center !important;
-        transform: scale(2.15) !important;
+        width: 138px !important;
+        height: 128px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        object-fit: contain !important;
+        object-position: center center !important;
+        transform: none !important;
         transform-origin: center !important;
+        padding-right: 1rem !important;
+        margin: 0 !important;
+        display: block !important;
     }
     .app-footer__logo {
         object-fit: cover !important;
