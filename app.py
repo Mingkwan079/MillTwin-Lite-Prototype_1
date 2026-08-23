@@ -831,39 +831,11 @@ st.markdown(
 
     .best-candidate__value {
         margin-top: 0.42rem;
-        color:#0A2463 !important;
-        -webkit-text-fill-color:#0A2463 !important;
+        color: var(--paper);
         font-family: var(--font-mono);
-        font-size: 0.95rem;
+        font-size: 0.84rem;
         font-weight: 700;
-        line-height: 1.75;
-    }
-
-    .best-candidate__value b {
-        color:#0A2463 !important;
-        -webkit-text-fill-color:#0A2463 !important;
-        font-weight: 800;
-    }
-
-    .roughness-shell {
-        border-radius: 16px;
-        padding: 0.45rem 0.55rem 0.15rem 0.55rem;
-        margin-bottom: 0.35rem;
-        overflow: hidden;
-    }
-
-    .roughness-shell--pass {
-        border: 2px solid #198754;
-        background: rgba(25, 135, 84, 0.08);
-    }
-
-    .roughness-shell--review {
-        border: 2px solid #D8315B;
-        background: rgba(216, 49, 91, 0.08);
-    }
-
-    .roughness-shell [data-testid="stPlotlyChart"] {
-        background: transparent !important;
+        line-height: 1.6;
     }
 
 
@@ -2517,7 +2489,7 @@ def section_header(index: str, title: str, description: str = "") -> None:
 
 def roughness_chart(title: str, value: float, limit: float):
     """Compact engineering chart showing prediction against the acceptance limit."""
-    upper = max(limit * 1.38, value * 1.18, 1e-6)
+    upper = max(limit * 1.35, value * 1.18, 1e-6)
     passed = value <= limit
     state_color = "#198754" if passed else "#D8315B"
     state_label = "PASS" if passed else "REVIEW"
@@ -2526,128 +2498,72 @@ def roughness_chart(title: str, value: float, limit: float):
     fig.add_trace(
         go.Bar(
             x=[value],
-            y=[""],
+            y=[title],
             orientation="h",
             marker={
-                "color": state_color,
-                "line": {"color": "#FFFFFF", "width": 2.2},
+                "color": "#FFFFFF",
+                "line": {"color": state_color, "width": 3},
             },
-            width=0.42,
+            width=0.34,
             hovertemplate=f"{title}: %{{x:.3f}} µm · {state_label}<extra></extra>",
         )
     )
     fig.add_vline(
         x=limit,
-        line_width=2.5,
+        line_width=2,
         line_dash="dash",
         line_color="#1E1B18",
+        annotation_text=f"Target {limit:.3f} µm",
+        annotation_position="top",
     )
     fig.add_annotation(
-        x=limit,
-        y=1.16,
-        xref="x",
-        yref="paper",
-        text=f"Target {limit:.3f} µm",
+        x=value,
+        y=title,
+        text=f"{value:.3f} µm",
         showarrow=False,
-        yanchor="bottom",
-        font={
-            "size": 12,
-            "color": "#5C6472",
-            "family": "JetBrains Mono, Cascadia Code, monospace",
-        },
+        xanchor="left" if value < upper * 0.78 else "right",
+        xshift=8 if value < upper * 0.78 else -8,
+        font={"size": 13, "color": state_color, "family": "JetBrains Mono, Cascadia Code, monospace"},
     )
     fig.add_annotation(
-        x=0.985,
-        y=0.97,
-        xref="paper",
-        yref="paper",
-        text=f"<b>{state_label}</b>",
+        x=upper * 0.985,
+        y=title,
+        text=state_label,
         showarrow=False,
         xanchor="right",
-        yanchor="top",
-        font={
-            "size": 11,
-            "color": state_color,
-            "family": "JetBrains Mono, Cascadia Code, monospace",
-        },
+        yshift=24,
+        font={"size": 11, "color": state_color, "family": "JetBrains Mono, Cascadia Code, monospace"},
     )
-
-    inside_threshold = 0.22 * upper
-    if value >= inside_threshold:
-        fig.add_annotation(
-            x=max(value - 0.02 * upper, 0.02 * upper),
-            y="",
-            xref="x",
-            yref="y",
-            text=f"<b>{value:.3f} µm</b>",
-            showarrow=False,
-            xanchor="right",
-            font={
-                "size": 12,
-                "color": "#FFFFFF",
-                "family": "JetBrains Mono, Cascadia Code, monospace",
-            },
-        )
-    else:
-        fig.add_annotation(
-            x=value + 0.015 * upper,
-            y="",
-            xref="x",
-            yref="y",
-            text=f"<b>{value:.3f} µm</b>",
-            showarrow=False,
-            xanchor="left",
-            font={
-                "size": 12,
-                "color": state_color,
-                "family": "JetBrains Mono, Cascadia Code, monospace",
-            },
-        )
-
-    fig.add_annotation(
-        x=0.5,
-        y=-0.18,
-        xref="paper",
-        yref="paper",
-        text=f"<b>{title}</b>",
-        showarrow=False,
-        xanchor="center",
-        yanchor="top",
-        font={
-            "size": 18,
-            "color": "#1E1B18",
-            "family": "Inter, Arial, sans-serif",
-        },
-    )
-
     fig.update_layout(
-        height=215,
-        margin=dict(l=14, r=14, t=56, b=54),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        height=185,
+        margin=dict(l=20, r=24, t=45, b=30),
+        paper_bgcolor="#FFFAFF",
+        plot_bgcolor="#FFFAFF",
         showlegend=False,
-        bargap=0.55,
         xaxis={
             "range": [0, upper],
             "title": "Surface roughness (µm)",
             "gridcolor": "#D9D6D9",
             "zeroline": False,
-            "showline": False,
-            "tickfont": {"color": "#5C6472", "size": 11},
+            "showline": True,
+            "mirror": True,
+            "linecolor": state_color,
+            "linewidth": 2,
+            "tickfont": {"color": "#5C6472"},
             "title_font": {"color": "#5C6472", "size": 11},
-            "title_standoff": 18,
         },
         yaxis={
             "showgrid": False,
-            "showline": False,
-            "showticklabels": False,
+            "showline": True,
+            "mirror": True,
+            "linecolor": state_color,
+            "linewidth": 2,
+            "tickfont": {"color": "#1E1B18", "size": 12},
         },
-        font={
-            "family": "JetBrains Mono, Cascadia Code, monospace",
-            "color": "#5C6472",
-        },
+        font={"family": "JetBrains Mono, Cascadia Code, monospace", "color": "#5C6472"},
     )
     return fig
+
 
 
 def normalize_fem_columns(frame: pd.DataFrame) -> pd.DataFrame:
@@ -3048,25 +2964,9 @@ with APP_MAIN:
             if result:
                 d1, d2 = st.columns(2)
                 with d1:
-                    sa_pass = result["Sa"] <= float(target_sa)
-                    sa_shell_class = "roughness-shell roughness-shell--pass" if sa_pass else "roughness-shell roughness-shell--review"
-                    st.markdown(f'<div class="{sa_shell_class}">', unsafe_allow_html=True)
-                    st.plotly_chart(
-                        roughness_chart("Sa", result["Sa"], target_sa),
-                        width="stretch",
-                        config={"displayModeBar": False},
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.plotly_chart(roughness_chart("Sa", result["Sa"], target_sa), width="stretch", config={"displayModeBar": False})
                 with d2:
-                    sz_pass = result["Sz"] <= float(target_sz)
-                    sz_shell_class = "roughness-shell roughness-shell--pass" if sz_pass else "roughness-shell roughness-shell--review"
-                    st.markdown(f'<div class="{sz_shell_class}">', unsafe_allow_html=True)
-                    st.plotly_chart(
-                        roughness_chart("Sz", result["Sz"], target_sz),
-                        width="stretch",
-                        config={"displayModeBar": False},
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.plotly_chart(roughness_chart("Sz", result["Sz"], target_sz), width="stretch", config={"displayModeBar": False})
                 physics_ok = result["Sa"] > 0 and result["Sz"] >= 2.0 * result["Sa"]
                 st.caption(f"Geometry consistency: {'PASS' if physics_ok else 'REVIEW'} · Model domain: {'IN' if in_domain else 'OUT'}")
 
