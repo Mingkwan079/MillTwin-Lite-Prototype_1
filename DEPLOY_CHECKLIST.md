@@ -1,20 +1,20 @@
-# MillTwin-Lite deployment checklist
+# MillTwin-Lite Round-3 deployment checklist
 
-- [ ] Create GitHub repository `MillTwin-Lite`
-- [ ] Upload all files from this deploy package to the repository root
-- [ ] Confirm `app.py` and `milltwin_pidl_sasz.onnx` are visible at repository root
+- [ ] Upload the contents of this folder to the GitHub repository root
+- [ ] Confirm `app.py` is at repository root
+- [ ] Confirm `milltwin_pidl_sasz.onnx` is at repository root
+- [ ] Confirm `info.json` describes Trial 86 / 96-32-128 / D6-Z4-45deg
 - [ ] Confirm `requirements.txt` is present
-- [ ] Do **not** upload `.streamlit/secrets.toml`, passwords, API keys, or `.env`
-- [ ] Open Streamlit Community Cloud and connect GitHub
-- [ ] Select repository + `main` branch
-- [ ] Set entrypoint to `app.py`
-- [ ] Select Python 3.11 when available
-- [ ] Deploy
-- [ ] Open the generated `.streamlit.app` URL
-- [ ] Confirm sidebar says `MODEL STATUS • ONLINE`
-- [ ] Run one Forward prediction
-- [ ] Run one Inverse search
-- [ ] Test Ra QC
-- [ ] Test CSV upload in Validation if needed
-- [ ] Test the app on a phone and another computer
-- [ ] Share the public link
+- [ ] Do not upload `.env`, API keys or `.streamlit/secrets.toml`
+- [ ] Connect the repository to Streamlit Community Cloud
+- [ ] Branch = `main`
+- [ ] Entrypoint = `app.py`
+- [ ] Prefer Python 3.11
+- [ ] Confirm model status is ONLINE
+- [ ] Forward test: PASS case shows white Sa/Sz bars with green outlines
+- [ ] Forward test: REVIEW case shows white Sa/Sz bars with red outlines
+- [ ] Confirm inverse TOP CANDIDATE values are readable in dark navy text
+- [ ] Run Inverse Search and export CSV
+- [ ] Test input-domain warning
+- [ ] Test Ra QC if used in demo
+- [ ] Verify app on desktop and mobile

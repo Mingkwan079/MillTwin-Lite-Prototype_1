@@ -1,58 +1,59 @@
-# MillTwin-Lite
+# MillTwin-Lite — Streamlit deployment package (Round 3 / Trial 86)
 
-Physics-informed CNC model for Sa/Sz prediction, inverse parameter search, and surface validation.
+This folder is the lightweight GitHub/Streamlit deployment extracted from the locked WP3 Round-3 package.
+It contains the production ONNX surrogate and only the runtime files needed by the public demo.
+
+## Production model
+
+- Model: PIDL Trial 86 final retrain
+- Inputs: `n_rpm, fz_mm_per_tooth, ap_mm, ae_mm, eps_r_um, eps_a_um`
+- Outputs: `Sa_um, Sz_um`
+- Architecture: `96 → 32 → 128`
+- Development set: 425 samples
+- Frozen final test: 75 samples
+- Final-test MAPE: Sa `9.5505%`, Sz `4.7386%`
+- Tool: Sandvik `1P341-0600-XA 1630`, D=6 mm, Z=4, helix=45°, flute length=13 mm
+
+The final-test reference values are FSM/simulation targets, not direct experimental validation.
 
 ## Included files
 
-- `app.py` — Streamlit UI/application
-- `logo.png` — Millcore logo used by the UI
-- `milltwin_pidl_sasz.onnx` — deployed Sa/Sz ONNX model
-- `info.json` — model metadata/design domain
-- `model_metrics.csv` — model performance data used in Dossier
-- `physics_diagnostics.csv` — physics diagnostics used in Dossier
-- `ablation_results.csv` — optional evidence table
+- `app.py` — Streamlit UI
+- `logo.png` — Millcore logo
+- `milltwin_pidl_sasz.onnx` — production Trial-86 ONNX model
+- `info.json` — model metadata, input domain and final metrics
+- `model_metrics.csv` — model performance table
+- `physics_diagnostics.csv` — physics diagnostics
+- `ablation_results.csv` — MLP/PIDL ablation evidence
 - `model_card.md` — model documentation
-- `requirements.txt` — cloud runtime dependencies only
-- `.streamlit/config.toml` — Streamlit theme/server defaults
-- `.gitignore` — prevents training outputs/secrets from being pushed accidentally
+- `requirements.txt` — runtime-only dependencies
+- `.streamlit/config.toml` — Streamlit configuration
+- `.gitignore` — excludes development/training artifacts and secrets
+
+## UI changes in this deploy build
+
+- Inverse Search top-candidate text uses dark navy text on the light result card for readability.
+- Forward Sa/Sz bars use white fill with a status outline:
+  - green border = PASS
+  - red border = REVIEW
+- The plot frame follows the same PASS/REVIEW status color.
+
+These UI changes do not alter the ONNX model, scaler logic, prediction equations, input domain or trained weights.
 
 ## Run locally
 
-Use Python 3.11 if possible.
-
-```bash
-python -m venv .venv
-```
-
-Windows PowerShell:
+Python 3.11 is recommended.
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 streamlit run app.py
 ```
 
-macOS/Linux:
+## GitHub layout
 
-```bash
-source .venv/bin/activate
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Then open the local URL printed by Streamlit (normally `http://localhost:8501`).
-
-## Publish so other people can use it
-
-### 1. Create a GitHub repository
-
-Create a new repository, for example:
-
-`MillTwin-Lite`
-
-Upload **the contents of this folder** to the repository root. `app.py` should be at the top level, not inside another nested folder.
-
-Expected GitHub layout:
+Upload the **contents of this folder** to the repository root:
 
 ```text
 MillTwin-Lite/
@@ -68,39 +69,23 @@ MillTwin-Lite/
 ├── ablation_results.csv
 ├── model_card.md
 ├── requirements.txt
+├── DEPLOY_CHECKLIST.md
 └── README.md
 ```
 
-### 2. Deploy on Streamlit Community Cloud
+## Deploy on Streamlit Community Cloud
 
-1. Sign in to Streamlit Community Cloud with GitHub.
-2. Choose **Create app / Deploy app**.
-3. Select the GitHub repository containing these files.
-4. Branch: `main`.
-5. Main file path / entrypoint: `app.py`.
-6. In advanced settings, use **Python 3.11** if the option is available.
-7. Deploy.
+1. Push these files to GitHub.
+2. Create a Streamlit Community Cloud app from the repository.
+3. Branch: `main`.
+4. Entry point: `app.py`.
+5. Use Python 3.11 when available.
+6. Deploy and run one Forward prediction and one Inverse Search.
 
-After the build finishes you will receive a public link similar to:
+## Scope / limitations
 
-`https://your-app-name.streamlit.app`
-
-Send that link to anyone you want to demo the application to. They only need a browser.
-
-## Important demo limitations
-
-- The deployed ONNX model predicts `Sa` and `Sz` only within its documented design scope.
-- `Ra QC` checks a measured Ra value against a selected limit; it does **not** infer Ra from Sa/Sz.
-- Prediction History currently uses Streamlit session state. It is a temporary per-session log, not a persistent user database.
-- G-code generation is intentionally excluded from the current product scope.
-- Do not present model output as a substitute for machine qualification or experimental validation.
-
-## Public vs private deployment
-
-If the GitHub repository/app is public, visitors can use the app without installing anything. Keep in mind that files stored in a public GitHub repository—including the ONNX model—are visible/downloadable from that repository.
-
-If the ONNX model should remain private, use a private repository and restrict app access, or move inference to a private backend in a later production architecture.
-
-## Updating the app later
-
-Edit files locally, commit/push changes to the same GitHub repository, and the hosted Streamlit app can rebuild/redeploy from that repository. Keep model filenames stable unless you also update `app.py`.
+- The deployed model predicts Sa and Sz only.
+- Current model scope is the documented D6 down-milling design domain in `info.json`.
+- `Ra QC` is a separate measured/manual quality-control path; the ONNX model does not infer Ra.
+- Do not present the frozen-test error as experimental machining error.
+- Public GitHub repositories expose the ONNX file for download. Use a private repository/backend if the model must remain private.

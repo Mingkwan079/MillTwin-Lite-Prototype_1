@@ -50,9 +50,9 @@ DESIGN_RANGES = {
 }
 TOOL_DIAMETER_MM = 6.0
 NUM_FLUTES = 4
-HELIX_ANGLE_DEG = 36.0
-FLUTE_LENGTH_MM = 16.0
-BOTTOM_DISH_ANGLE_DEG = 1.0
+HELIX_ANGLE_DEG = 45.0
+FLUTE_LENGTH_MM = 13.0
+BOTTOM_DISH_ANGLE_DEG = 2.0
 AE_PARTIAL_MIN_MM = 0.3
 AE_PARTIAL_MAX_MM = 3.0
 AE_SLOT_MM = 6.0
@@ -1575,7 +1575,17 @@ st.markdown(
         animation:cardReveal .5s var(--ease) both;
     }
     .best-candidate__label { color:#1978B9 !important; }
-    .best-candidate__value { font-size:.88rem !important; line-height:1.65 !important; }
+    .best-candidate__value {
+        color:#0A2463 !important;
+        -webkit-text-fill-color:#0A2463 !important;
+        font-size:.88rem !important;
+        line-height:1.65 !important;
+    }
+    .best-candidate__value b {
+        color:#0A2463 !important;
+        -webkit-text-fill-color:#0A2463 !important;
+        font-weight:800 !important;
+    }
     .inverse-placeholder {
         min-height:330px; border:1px solid rgba(62,146,204,.38); border-radius:9px;
         display:grid; place-items:center; text-align:center; padding:2rem; color:var(--muted);
@@ -2481,7 +2491,8 @@ def roughness_chart(title: str, value: float, limit: float):
     """Compact engineering chart showing prediction against the acceptance limit."""
     upper = max(limit * 1.35, value * 1.18, 1e-6)
     passed = value <= limit
-    bar_color = "#3E92CC" if passed else "#D8315B"
+    state_color = "#198754" if passed else "#D8315B"
+    state_label = "PASS" if passed else "REVIEW"
 
     fig = go.Figure()
     fig.add_trace(
@@ -2489,9 +2500,12 @@ def roughness_chart(title: str, value: float, limit: float):
             x=[value],
             y=[title],
             orientation="h",
-            marker={"color": bar_color, "line": {"width": 0}},
+            marker={
+                "color": "#FFFFFF",
+                "line": {"color": state_color, "width": 3},
+            },
             width=0.34,
-            hovertemplate=f"{title}: %{{x:.3f}} µm<extra></extra>",
+            hovertemplate=f"{title}: %{{x:.3f}} µm · {state_label}<extra></extra>",
         )
     )
     fig.add_vline(
@@ -2509,7 +2523,16 @@ def roughness_chart(title: str, value: float, limit: float):
         showarrow=False,
         xanchor="left" if value < upper * 0.78 else "right",
         xshift=8 if value < upper * 0.78 else -8,
-        font={"size": 13, "color": "#1E1B18", "family": "JetBrains Mono, Cascadia Code, monospace"},
+        font={"size": 13, "color": state_color, "family": "JetBrains Mono, Cascadia Code, monospace"},
+    )
+    fig.add_annotation(
+        x=upper * 0.985,
+        y=title,
+        text=state_label,
+        showarrow=False,
+        xanchor="right",
+        yshift=24,
+        font={"size": 11, "color": state_color, "family": "JetBrains Mono, Cascadia Code, monospace"},
     )
     fig.update_layout(
         height=185,
@@ -2522,11 +2545,19 @@ def roughness_chart(title: str, value: float, limit: float):
             "title": "Surface roughness (µm)",
             "gridcolor": "#D9D6D9",
             "zeroline": False,
+            "showline": True,
+            "mirror": True,
+            "linecolor": state_color,
+            "linewidth": 2,
             "tickfont": {"color": "#5C6472"},
             "title_font": {"color": "#5C6472", "size": 11},
         },
         yaxis={
             "showgrid": False,
+            "showline": True,
+            "mirror": True,
+            "linecolor": state_color,
+            "linewidth": 2,
             "tickfont": {"color": "#1E1B18", "size": 12},
         },
         font={"family": "JetBrains Mono, Cascadia Code, monospace", "color": "#5C6472"},
@@ -3457,7 +3488,7 @@ with APP_MAIN:
                 "feature_columns": info.get("raw_input_columns", [*FEATURES, MILLING_MODE]),
                 "model_feature_columns": info.get("model_feature_columns", MODEL_FEATURES),
                 "target_columns": info.get("target_columns", TARGETS),
-                "fixed_tool": info.get("fixed_tool", {"D_mm": 6.0, "Zn": 4, "beta_deg": 36.0}),
+                "fixed_tool": info.get("fixed_tool", {"D_mm": 6.0, "Zn": 4, "beta_deg": 45.0}),
                 "physical_scope": info.get("physical_scope", "unknown"),
             }
             st.json(info_summary)

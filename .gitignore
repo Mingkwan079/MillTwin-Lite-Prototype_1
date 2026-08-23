@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Local IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Training outputs and heavy local artifacts
+outputs/
+mlruns/
+mlflow.db
+*.pkl
+*.pt
+*.pth
+.Rhistory
+
+# Local datasets are not needed by the deployed inference app
+*.xlsx
+*.xls
+
+# Secrets
+.streamlit/secrets.toml
+.env
